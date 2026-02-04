@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Credit Risk Analysis - FinSight AI</title>
+  <link rel="stylesheet" href="styles.css" />
+  
+</head>
+<body>
+  <div class="dashboard-container">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="logo">FinSight AI Platform</div>
+      <a href="dashboard.html" class="nav-item">Dashboard</a>
+      <a href="credit-risk.html" class="nav-item active">Credit Risk</a>
+      <a href="fraud.html" class="nav-item">Fraud Detection</a>
+      <a href="portfolio.html" class="nav-item">Portfolio Optimization</a>
+      <a href="history.html" class="nav-item">Analysis History</a>
+
+
+      <div class="sidebar-footer">
+      <a href="signin.html">↩ Logout</a>
+    </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <!-- Topbar -->
+      <div class="topbar">
+        <input type="text" placeholder="Search analyses, reports, data..." />
+        <div class="user-info">
+          <strong>Alex Morgan</strong>
+          <span>Risk Analyst</span>
+        </div>
+      </div>
+
+      <!-- Centered Section -->
+      <div class="center-wrapper">
+        <h2>Credit Risk Analysis</h2>
+        <p style="color: #94a3b8;">
+          Full creditworthiness evaluation using batch CSV uploads or single applicant forms.
+        </p>
+
+        <!-- Toggle -->
+        <div class="toggle-container">
+          <button id="batchBtn" class="active" onclick="showForm('batch')">Batch Analysis</button>
+          <button id="individualBtn" onclick="showForm('individual')">Individual Check</button>
+        </div>
+
+        <!-- Batch Upload -->
+        <div id="batchForm" class="form-container">
+          <h3>Upload Dataset (CSV)</h3>
+          <div class="upload-box">
+            <p>Drag and drop your CSV file here or choose manually.</p>
+            <input type="file" accept=".csv" />
+          </div>
+        </div>
+
+        <!-- Individual Check -->
+        <div id="individualForm" class="form-container" style="display:none;">
+          <h3>Individual Applicant Data</h3>
+          <div class="form-row">
+            <div class="field">
+              <label>Monthly Income ($)</label>
+              <input type="number" placeholder="e.g. 5000" />
+            </div>
+            <div class="field">
+              <label>Total Debt ($)</label>
+              <input type="number" placeholder="e.g. 25000" />
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="field">
+              <label>Credit History (Years)</label>
+              <input type="number" placeholder="e.g. 12" />
+            </div>
+            <div class="field">
+              <label>Purpose</label>
+              <input type="text" placeholder="e.g. Home Loan" />
+            </div>
+          </div>
+          <button class="btn-submit">Calculate Risk Score →</button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    function showForm(type) {
+      const batch = document.getElementById('batchForm');
+      const individual = document.getElementById('individualForm');
+      const batchBtn = document.getElementById('batchBtn');
+      const indBtn = document.getElementById('individualBtn');
+
+      if (type === 'batch') {
+        batch.style.display = 'block';
+        individual.style.display = 'none';
+        batchBtn.classList.add('active');
+        indBtn.classList.remove('active');
+      } else {
+        batch.style.display = 'none';
+        individual.style.display = 'block';
+        batchBtn.classList.remove('active');
+        indBtn.classList.add('active');
+      }
+    }
+  </script>
+</body>
+</html>

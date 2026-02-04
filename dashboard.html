@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard - FinSight AI</title>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <link rel="stylesheet" href="styles.css" />
+
+  
+</head>
+
+<body>
+
+<div class="dashboard-container">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">FinSight AI Platform</div>
+
+    <a href="dashboard.html" class="nav-item active">Dashboard</a>
+    <a href="credit-risk.html" class="nav-item">Credit Risk</a>
+    <a href="fraud.html" class="nav-item">Fraud Detection</a>
+    <a href="portfolio.html" class="nav-item">Portfolio Optimization</a>
+    <a href="history.html" class="nav-item">Analysis History</a>
+
+
+    <div class="sidebar-footer">
+      <a href="signin.html">↩ Logout</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- TOP -->
+    <div class="topbar">
+      <input placeholder="Search analyses, reports, data..." />
+      <div class="user-info">
+        <strong>Alex Morgan</strong>
+        <div>Risk Analyst</div>
+      </div>
+    </div>
+
+    <div class="section-title">Welcome back, <span class="positive">Alex</span></div>
+    <div class="subtitle">Here's what's happening with your financial analyses today.</div>
+
+    <!-- METRICS -->
+    <div class="card-grid">
+      <div class="card">
+        <div class="metric-title">Total Portfolio Value</div>
+        <div class="metric-value">$4.2M</div>
+        <div class="positive">+12.5% vs last month</div>
+      </div>
+      <div class="card">
+        <div class="metric-title">Risk Score</div>
+        <div class="metric-value">78 / 100</div>
+        <div class="negative">-3.2%</div>
+      </div>
+      <div class="card">
+        <div class="metric-title">Fraud Alerts</div>
+        <div class="metric-value">3</div>
+        <div class="negative">+45%</div>
+      </div>
+      <div class="card">
+        <div class="metric-title">Analyses Today</div>
+        <div class="metric-value">24</div>
+        <div class="positive">+8%</div>
+      </div>
+    </div>
+
+    <!-- CHARTS -->
+    <div class="grid-2">
+      <div class="chart-card">
+        <div class="metric-title">Risk Score Trend</div>
+        <canvas id="riskChart"></canvas>
+      </div>
+
+      <div class="chart-card">
+        <div class="metric-title">Asset Allocation</div>
+        <canvas id="allocChart"></canvas>
+      </div>
+    </div>
+
+    <!-- ACTIVITY + MODELS -->
+    <div class="grid-2">
+      <div class="chart-card">
+        <div class="section-title">Recent Activity</div>
+        <ul class="activity-list">
+          <li>✅ <strong>Credit Risk Analysis Complete</strong><br><small>5 minutes ago</small></li>
+          <li>⚠️ <strong>High-Risk Transaction Detected</strong><br><small>23 minutes ago</small></li>
+          <li>📄 <strong>Dataset Uploaded</strong><br><small>1 hour ago</small></li>
+          <li>📊 <strong>Portfolio Rebalancing Suggested</strong><br><small>2 hours ago</small></li>
+        </ul>
+      </div>
+
+      <div class="chart-card">
+        <div class="section-title">AI Models</div>
+
+        <strong>Credit Risk Classifier</strong> v3.2.1
+        <div class="progress"><div class="progress-bar" style="width:94.7%">94.7%</div></div>
+        <span class="positive">✔ Active</span>
+
+        <br><br>
+
+        <strong>Fraud Detection Engine</strong> v2.8.0
+        <div class="progress"><div class="progress-bar" style="width:97.2%">97.2%</div></div>
+        <span class="positive">✔ Active</span>
+
+        <br><br>
+
+        <strong>Portfolio Optimizer</strong> v1.5.3
+        <div class="progress"><div class="progress-bar" style="width:89.1%">89.1%</div></div>
+        <span class="positive">✔ Active</span>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- CHARTS -->
+<script>
+new Chart(riskChart, {
+  type: 'line',
+  data: {
+    labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul'],
+    datasets: [{
+      data: [68,66,74,70,78,82,80],
+      borderColor: '#17f9a3',
+      backgroundColor: 'rgba(23,249,163,0.2)',
+      tension: 0.3
+    }]
+  },
+  options: { plugins:{legend:{display:false}}, scales:{y:{min:50,max:100}} }
+});
+
+new Chart(allocChart, {
+  type: 'doughnut',
+  data: {
+    labels: ['Equities','Fixed Income','Real Estate','Commodities'],
+    datasets: [{
+      data: [40,30,15,15],
+      backgroundColor: ['#17f9a3','#2ecc71','#f1c40f','#9b59b6']
+    }]
+  },
+  options: { plugins:{legend:{position:'bottom'}} }
+});
+</script>
+
+</body>
+</html>

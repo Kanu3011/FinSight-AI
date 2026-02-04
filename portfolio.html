@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Credit Risk Analysis - FinSight AI</title>
+  <link rel="stylesheet" href="styles.css" />
+  
+</head>
+<body>
+  <div class="dashboard-container">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+      <div class="logo">FinSight AI Platform</div>
+      <a href="dashboard.html" class="nav-item">Dashboard</a>
+      <a href="credit-risk.html" class="nav-item">Credit Risk</a>
+      <a href="fraud.html" class="nav-item">Fraud Detection</a>
+      <a href="portfolio.html" class="nav-item active">Portfolio Optimization</a>
+      <a href="history.html" class="nav-item">Analysis History</a>
+
+
+      <div class="sidebar-footer">
+      <a href="signin.html">↩ Logout</a>
+    </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+      <!-- Topbar -->
+      <div class="topbar">
+        <input type="text" placeholder="Search analyses, reports, data..." />
+        <div class="user-info">
+          <strong>Alex Morgan</strong>
+          <span>Risk Analyst</span>
+        </div>
+      </div>
+
+      <!-- Centered Section -->
+      <div class="center-wrapper">
+        <h2>Portfolio Optimization Analysis</h2>
+        <p style="color: #94a3b8;">
+          Dynamic asset allocation based on historical volatility and risk-return curves
+        </p>
+
+        
+
+        <!-- Batch Upload -->
+        <div id="batchForm" class="form-container">
+          <h3>Upload Dataset (CSV)</h3>
+          <div class="upload-box">
+            <p>Drag and drop your CSV file here or choose manually.</p>
+            <input type="file" accept=".csv" />
+          </div>
+        </div>
+
+
+  <script>
+    function showForm(type) {
+      const batch = document.getElementById('batchForm');
+      const individual = document.getElementById('individualForm');
+      const batchBtn = document.getElementById('batchBtn');
+      const indBtn = document.getElementById('individualBtn');
+
+      if (type === 'batch') {
+        batch.style.display = 'block';
+        individual.style.display = 'none';
+        batchBtn.classList.add('active');
+        indBtn.classList.remove('active');
+      } else {
+        batch.style.display = 'none';
+        individual.style.display = 'block';
+        batchBtn.classList.remove('active');
+        indBtn.classList.add('active');
+      }
+    }
+  </script>
+</body>
+</html>

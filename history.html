@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Analysis History - FinSight AI</title>
+  <link rel="stylesheet" href="styles.css" />
+  
+</head>
+
+<body>
+  <div class="dashboard-container">
+
+    <!-- SIDEBAR (Same as dashboard) -->
+    <aside class="sidebar">
+      <div class="logo">FinSight AI Platform</div>
+      <a href="dashboard.html" class="nav-item">Dashboard</a>
+      <a href="credit-risk.html" class="nav-item">Credit Risk</a>
+      <a href="fraud.html" class="nav-item">Fraud Detection</a>
+      <a href="portfolio.html" class="nav-item">Portfolio</a>
+      <a href="history.html" class="nav-item active">Analysis History</a>
+
+      <div class="sidebar-footer">
+ 
+        <a href="signin.html">↩ Logout</a>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <main class="main-content">
+
+      <!-- Topbar -->
+      <div class="topbar">
+        <input type="text" placeholder="Search runs..." />
+        <div class="user-info">
+          <strong>Alex Morgan</strong>
+          <span>Risk Analyst</span>
+        </div>
+      </div>
+
+      <!-- Title -->
+      <div class="history-header">Analysis History</div>
+      <div class="history-subtitle">
+        Review and download your previously processed modules.
+      </div>
+
+      <!-- History List -->
+      <div class="history-list">
+
+        <!-- ITEM -->
+        <div class="history-item">
+          <div class="history-info">
+            <div class="history-icon">📄</div>
+            <div class="history-details">
+              <div class="run-id">RUN‑9281 • CREDIT RISK</div>
+              <div class="file-name">q4_mortgage_applications.csv</div>
+              <div class="date-time">2024‑03‑15 14:20</div>
+            </div>
+          </div>
+
+          <div class="status-info">Low Risk</div>
+
+          <div class="actions">
+            <button class="report-btn">Report</button>
+            <button class="view-btn">View →</button>
+          </div>
+        </div>
+
+        <!-- ITEM -->
+        <div class="history-item">
+          <div class="history-info">
+            <div class="history-icon">📄</div>
+            <div class="history-details">
+              <div class="run-id">RUN‑9280 • FRAUD DETECTION</div>
+              <div class="file-name">realtime_tx_stream_v2.json</div>
+              <div class="date-time">2024‑03‑14 09:45</div>
+            </div>
+          </div>
+
+          <div class="status-info">3 Alerts</div>
+
+          <div class="actions">
+            <button class="report-btn">Report</button>
+            <button class="view-btn">View →</button>
+          </div>
+        </div>
+
+        <!-- ITEM -->
+        <div class="history-item">
+          <div class="history-info">
+            <div class="history-icon">📄</div>
+            <div class="history-details">
+              <div class="run-id">RUN‑9279 • PORTFOLIO OPT</div>
+              <div class="file-name">tech_growth_etfs.xlsx</div>
+              <div class="date-time">2024‑03‑12 16:30</div>
+            </div>
+          </div>
+
+          <div class="status-info">8.2% Sharpe</div>
+
+          <div class="actions">
+            <button class="report-btn">Report</button>
+            <button class="view-btn">View →</button>
+          </div>
+        </div>
+
+        <!-- ITEM -->
+        <div class="history-item">
+          <div class="history-info">
+            <div class="history-icon">📄</div>
+            <div class="history-details">
+              <div class="run-id">RUN‑9278 • CREDIT RISK</div>
+              <div class="file-name">auto_loans_mar.csv</div>
+              <div class="date-time">2024‑03‑10 11:15</div>
+            </div>
+          </div>
+
+          <div class="status-info">Medium Risk</div>
+
+          <div class="actions">
+            <button class="report-btn">Report</button>
+            <button class="view-btn">View →</button>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+</body>
+</html>
