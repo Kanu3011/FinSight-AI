@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}FinSight AI{% endblock %}
+
+{% block body %}
+<header class="header">
+  <div class="logo-container">
+    <div class="logo-icon">
+      <div class="eye-icon">
+        <div class="eye-pupil"></div>
+      </div>
+    </div>
+    <span class="logo-text">FinSight AI</span>
+  </div>
+
+  <nav class="main-nav">
+    <a href="#features" class="nav-link">Features</a>
+    <a href="#workflow" class="nav-link">Workflow</a>
+  </nav>
+
+  <div class="header-actions">
+    <a href="{{ url_for('signin') }}"><button class="btn-signin">Sign In</button></a>
+  </div>
+</header>
+
+<section class="hero hero-gradient">
+  <div class="badge">AI-powered financial analytics</div>
+  <h1 class="hero-title">
+    Real credit-risk analysis for your final-year project
+  </h1>
+  <p class="hero-subtitle">
+    FinSight AI combines secure authentication, live data analysis, persistent result history, and a modern dashboard
+    in one Flask application.
+  </p>
+  <div class="hero-cta">
+    <a href="{{ url_for('register') }}"><button class="btn-primary btn-large">Create Account</button></a>
+    <a href="{{ url_for('signin') }}"><button class="btn-secondary btn-large">Open Dashboard</button></a>
+  </div>
+</section>
+
+<section id="features" class="features-section">
+  <div class="container">
+    <div class="features-grid">
+      <div class="feature-card glass-card glass-card-hover">
+        <h3 class="feature-title">Secure Login</h3>
+        <p class="feature-description">Registration, hashed passwords, CSRF protection, rate-limited auth, and protected pages.</p>
+      </div>
+      <div class="feature-card glass-card glass-card-hover">
+        <h3 class="feature-title">Live Credit-Risk Flow</h3>
+        <p class="feature-description">Run individual or batch credit-risk analysis against a trained model using the real German credit dataset.</p>
+      </div>
+      <div class="feature-card glass-card glass-card-hover">
+        <h3 class="feature-title">Saved Results</h3>
+        <p class="feature-description">Store analysis runs, view result detail pages, and track all work from a user-specific history screen.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="workflow" class="statistics-section">
+  <div class="container">
+    <div class="statistics-card glass-card">
+      <div class="section-header">
+        <h2 class="section-title">Current Build Path</h2>
+        <p class="section-subtitle">The app now has a real foundation and is ready for fraud and portfolio modules next.</p>
+      </div>
+      <div class="statistics-grid">
+        <div class="stat-item">
+          <div class="stat-value">1</div>
+          <div class="stat-label">Live Module</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">3</div>
+          <div class="stat-label">Core Data Tables</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">2</div>
+          <div class="stat-label">Auth Flows</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-value">24/7</div>
+          <div class="stat-label">Deployment Ready</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}

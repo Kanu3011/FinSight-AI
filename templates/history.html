@@ -1,0 +1,43 @@
+{% extends "_app_shell.html" %}
+
+{% set active_page = "history" %}
+{% set page_heading = "Analysis History" %}
+{% set page_subtitle = "Every stored run for your account, with real database-backed results." %}
+
+{% block app_content %}
+<div class="history-list">
+  {% if runs %}
+    {% for run in runs %}
+      <div class="history-item">
+        <div class="history-info">
+          <div class="history-details">
+            <div class="run-id">Run #{{ run.id }} • {{ run.analysis_type|replace('_', ' ')|title }} • {{ run.input_mode|title }}</div>
+            <div class="file-name">{{ run.summary or run.original_filename or 'Analysis run' }}</div>
+            <div class="date-time">{{ run.created_at }}</div>
+          </div>
+        </div>
+        <div class="status-info">
+          {% if run.analysis_type == 'fraud' %}
+            {{ run.flagged_count or 0 }} flagged
+            {% if run.max_risk_score is not none %}<div>Max {{ run.max_risk_score }} / 100</div>{% endif %}
+          {% elif run.analysis_type == 'portfolio' %}
+            Sharpe {{ run.best_sharpe_ratio }}
+            {% if run.best_return is not none %}<div>Return {{ run.best_return }}%</div>{% endif %}
+          {% else %}
+            {{ run.risk_band or run.status|title }}
+            {% if run.risk_score is not none %}<div>{{ run.risk_score }} / 100</div>{% endif %}
+          {% endif %}
+        </div>
+        <div class="actions">
+          <a class="view-link" href="{{ url_for('analysis_detail', run_id=run.id) }}">View</a>
+        </div>
+      </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty-state">
+      <p>No analyses have been saved yet.</p>
+      <a href="{{ url_for('credit_risk') }}"><button class="btn-primary">Start Your First Run</button></a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

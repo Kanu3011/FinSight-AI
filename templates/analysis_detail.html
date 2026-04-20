@@ -1,0 +1,191 @@
+{% extends "_app_shell.html" %}
+
+{% set active_page = "history" %}
+{% set page_heading = "Analysis Detail" %}
+{% set page_subtitle = run.summary or "Detailed result view for a stored analysis run." %}
+
+{% block app_content %}
+<div class="grid-2 credit-grid">
+  <section class="chart-card">
+    <div class="section-title">Run Summary</div>
+    <div class="detail-list">
+      <div><strong>Analysis Type:</strong> {{ run.analysis_type|replace('_', ' ')|title }}</div>
+      <div><strong>Input Mode:</strong> {{ run.input_mode|title }}</div>
+      <div><strong>Status:</strong> {{ run.status|title }}</div>
+      <div><strong>Created At:</strong> {{ run.created_at }}</div>
+      {% if run.original_filename %}
+        <div><strong>Filename:</strong> {{ run.original_filename }}</div>
+      {% endif %}
+    </div>
+    <div class="actions detail-actions">
+      <a class="view-link" href="{{ url_for('analysis_report_json', run_id=run.id) }}">Download JSON Report</a>
+      <a class="view-link" href="{{ url_for('history') }}">Back to History</a>
+    </div>
+  </section>
+
+  <section class="chart-card">
+    <div class="section-title">Model Result</div>
+    {% if run.analysis_type == 'fraud' %}
+      <div class="result-kpis">
+        <div class="card">
+          <div class="metric-title">Flagged Count</div>
+          <div class="metric-value">{{ run.flagged_count }}</div>
+        </div>
+        <div class="card">
+          <div class="metric-title">Clear Count</div>
+          <div class="metric-value">{{ run.clear_count }}</div>
+        </div>
+        <div class="card">
+          <div class="metric-title">Average Risk</div>
+          <div class="metric-value">{{ run.average_risk_score }}</div>
+        </div>
+        <div class="card">
+          <div class="metric-title">Max Risk</div>
+          <div class="metric-value">{{ run.max_risk_score }}</div>
+        </div>
+      </div>
+      <p class="subtitle">{{ run.fraud_recommendation }}</p>
+    {% elif run.analysis_type == 'portfolio' %}
+      <div class="result-kpis">
+        <div class="card">
+          <div class="metric-title">Simulations</div>
+          <div class="metric-value">{{ run.simulations }}</div>
+        </div>
+        <div class="card">
+          <div class="metric-title">Best Return</div>
+          <div class="metric-value">{{ run.best_return }}%</div>
+        </div>
+        <div class="card">
+          <div class="metric-title">Best Volatility</div>
+          <div class="metric-value">{{ run.best_volatility }}%</div>
+        </div>
+        <div class="card">
+          <div class="metric-title">Best Sharpe</div>
+          <div class="metric-value">{{ run.best_sharpe_ratio }}</div>
+        </div>
+      </div>
+      <p class="subtitle">{{ run.portfolio_recommendation }}</p>
+    {% else %}
+      <div class="result-kpis">
+        <div class="card">
+          <div class="metric-title">Risk Band</div>
+          <div class="metric-value">{{ run.risk_band }}</div>
+        </div>
+        <div class="card">
+          <div class="metric-title">Risk Score</div>
+          <div class="metric-value">{{ run.risk_score }}</div>
+        </div>
+        <div class="card">
+          <div class="metric-title">Probability Good</div>
+          <div class="metric-value">{{ run.probability_good }}</div>
+        </div>
+        <div class="card">
+          <div class="metric-title">Probability Bad</div>
+          <div class="metric-value">{{ run.probability_bad }}</div>
+        </div>
+      </div>
+      <p class="subtitle">{{ run.recommendation }}</p>
+    {% endif %}
+  </section>
+</div>
+
+{% if run.analysis_type == 'credit_risk' and result.input_snapshot %}
+  <section class="chart-card">
+    <div class="section-title">Input Snapshot</div>
+    <div class="detail-grid">
+      {% for key, value in result.input_snapshot.items() %}
+        <div class="detail-item">
+          <strong>{{ key.replace('_', ' ')|title }}</strong>
+          <div>{{ value }}</div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+{% endif %}
+
+{% if run.analysis_type == 'portfolio' and result.recommended_allocation %}
+  <section class="chart-card">
+    <div class="section-title">Recommended Allocation</div>
+    <div class="detail-grid">
+      {% for asset, weight in result.recommended_allocation.items() %}
+        <div class="detail-item">
+          <strong>{{ asset }}</strong>
+          <div>{{ weight }}%</div>
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+{% endif %}
+
+{% if result.top_rows %}
+  <section class="chart-card">
+    <div class="section-title">{% if run.analysis_type == 'fraud' %}Flagged Transactions{% else %}Highest-Risk Rows{% endif %}</div>
+    <div class="table-wrap">
+      <table class="result-table">
+        <thead>
+          <tr>
+            {% if run.analysis_type == 'fraud' %}
+              <th>Predicted Label</th>
+              <th>Risk Score</th>
+              <th>Amount</th>
+              <th>Time</th>
+              <th>V14</th>
+              <th>V17</th>
+            {% else %}
+              <th>Predicted Label</th>
+              <th>Risk Score</th>
+              <th>Credit Amount</th>
+              <th>Duration</th>
+              <th>Age</th>
+              <th>Purpose</th>
+            {% endif %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in result.top_rows %}
+            <tr>
+              <td>{{ row.predicted_label }}</td>
+              <td>{{ row.risk_score }}</td>
+              {% if run.analysis_type == 'fraud' %}
+                <td>{{ row.Amount }}</td>
+                <td>{{ row.Time }}</td>
+                <td>{{ row.V14 }}</td>
+                <td>{{ row.V17 }}</td>
+              {% else %}
+                <td>{{ row.credit_amount }}</td>
+                <td>{{ row.month_duration }}</td>
+                <td>{{ row.age }}</td>
+                <td>{{ row.purpose }}</td>
+              {% endif %}
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endif %}
+
+{% if run.analysis_type == 'portfolio' and result.top_assets %}
+  <section class="chart-card">
+    <div class="section-title">Top Allocation Weights</div>
+    <div class="table-wrap">
+      <table class="result-table">
+        <thead>
+          <tr>
+            <th>Asset</th>
+            <th>Weight</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in result.top_assets %}
+            <tr>
+              <td>{{ row.asset }}</td>
+              <td>{{ row.weight }}%</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endif %}
+{% endblock %}

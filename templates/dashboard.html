@@ -1,0 +1,117 @@
+{% extends "_app_shell.html" %}
+
+{% set active_page = "dashboard" %}
+{% set page_heading = "Dashboard" %}
+{% set page_subtitle = "A live view of your analyses, not placeholder numbers." %}
+
+{% block app_content %}
+<div class="card-grid">
+  <div class="card">
+    <div class="metric-title">Total Analyses</div>
+    <div class="metric-value">{{ total_runs }}</div>
+    <div class="positive">Stored for your account</div>
+  </div>
+  <div class="card">
+    <div class="metric-title">Completed Runs</div>
+    <div class="metric-value">{{ completed_runs }}</div>
+    <div class="positive">Ready to review</div>
+  </div>
+  <div class="card">
+    <div class="metric-title">Average Credit Risk</div>
+    <div class="metric-value">{{ avg_risk_score if avg_risk_score is not none else "--" }}</div>
+    <div class="negative">Higher score means higher risk</div>
+  </div>
+  <div class="card">
+    <div class="metric-title">High Risk Cases</div>
+    <div class="metric-value">{{ high_risk_runs }}</div>
+    <div class="negative">Score 70 or above</div>
+  </div>
+  <div class="card">
+    <div class="metric-title">Fraud Alerts</div>
+    <div class="metric-value">{{ fraud_alerts }}</div>
+    <div class="negative">Flagged transactions</div>
+  </div>
+  <div class="card">
+    <div class="metric-title">Average Sharpe</div>
+    <div class="metric-value">{{ avg_sharpe if avg_sharpe is not none else "--" }}</div>
+    <div class="positive">Across saved portfolio runs</div>
+  </div>
+</div>
+
+<div class="grid-2 credit-grid">
+  <div class="chart-card">
+    <div class="section-title">Module Breakdown</div>
+    {% if module_breakdown %}
+      <div class="history-list">
+        {% for row in module_breakdown %}
+          <div class="history-item compact-item">
+            <div class="history-details">
+              <div class="file-name">{{ row.analysis_type|replace('_', ' ')|title }}</div>
+              <div class="run-id">Saved analyses in this module</div>
+            </div>
+            <div class="status-info">{{ row.count }}</div>
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">
+        <p>No module activity yet.</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <div class="chart-card">
+    <div class="section-title">Performance Highlights</div>
+    <div class="detail-grid">
+      <div class="detail-item">
+        <strong>Credit Risk</strong>
+        <div>Average score: {{ avg_risk_score if avg_risk_score is not none else "--" }}</div>
+      </div>
+      <div class="detail-item">
+        <strong>Fraud</strong>
+        <div>Total alerts: {{ fraud_alerts }}</div>
+      </div>
+      <div class="detail-item">
+        <strong>Portfolio</strong>
+        <div>Average Sharpe: {{ avg_sharpe if avg_sharpe is not none else "--" }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="chart-card">
+  <div class="section-title">Recent Activity</div>
+  {% if recent_runs %}
+    <div class="history-list">
+      {% for run in recent_runs %}
+        <div class="history-item">
+          <div class="history-details">
+            <div class="file-name">{{ run.summary or run.analysis_type|replace('_', ' ')|title }}</div>
+            <div class="run-id">{{ run.analysis_type|replace('_', ' ')|title }} • {{ run.input_mode|title }}</div>
+          </div>
+          <div class="status-info">
+            {% if run.analysis_type == 'fraud' %}
+              {{ run.flagged_count }} flagged
+            {% elif run.analysis_type == 'portfolio' %}
+              Sharpe {{ run.best_sharpe_ratio }}
+            {% elif run.risk_band %}
+              {{ run.risk_band }}
+            {% else %}
+              {{ run.status|title }}
+            {% endif %}
+            {% if run.analysis_type == 'credit_risk' and run.risk_score is not none %}<div>{{ run.risk_score }} / 100</div>{% endif %}
+          </div>
+          <div class="actions">
+            <a class="view-link" href="{{ url_for('analysis_detail', run_id=run.id) }}">Open</a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <p>You have not run an analysis yet.</p>
+      <a href="{{ url_for('credit_risk') }}"><button class="btn-primary">Run Credit Analysis</button></a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

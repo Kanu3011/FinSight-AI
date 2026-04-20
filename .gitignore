@@ -1,0 +1,32 @@
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.pytest_cache/
+.coverage
+htmlcov/
+
+.env
+.env.*
+!.env.example
+
+.venv/
+venv/
+env/
+
+.idea/
+.vscode/
+
+# Local databases
+finsight.db
+*.db
+*.sqlite
+*.sqlite3
+
+# Large raw datasets that should not be pushed
+creditcard.csv
+
+# OS files
+.DS_Store
+Thumbs.db

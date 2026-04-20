@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: finsight-ai
+    env: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn -w 2 -b 0.0.0.0:$PORT wsgi:app
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: FLASK_SECRET_KEY
+        generateValue: true
+      # For true multi-instance rate limiting, switch to Redis and set this to its URL
+      - key: RATELIMIT_STORAGE_URI
+        value: memory://
+

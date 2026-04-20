@@ -1,0 +1,26 @@
+{% extends "_app_shell.html" %}
+
+{% set active_page = "portfolio" %}
+{% set page_heading = "Portfolio Optimization" %}
+{% set page_subtitle = "Upload historical asset prices and generate a maximum-Sharpe allocation." %}
+
+{% block app_content %}
+<section class="chart-card">
+  <div class="section-title">Portfolio Optimizer</div>
+  <p class="subtitle">Upload a CSV where the first column is a date/index and the remaining columns are positive asset price series.</p>
+  <form action="{{ url_for('portfolio_batch') }}" method="post" enctype="multipart/form-data" class="stack-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <div class="form-grid">
+      <div class="field">
+        <label for="dataset">Portfolio CSV</label>
+        <input id="dataset" type="file" name="dataset" accept=".csv" required />
+      </div>
+      <div class="field">
+        <label for="risk_free_rate">Risk-Free Rate</label>
+        <input id="risk_free_rate" type="number" name="risk_free_rate" min="0" max="1" step="0.001" value="0.02" required />
+      </div>
+    </div>
+    <button type="submit" class="btn-primary">Optimize Portfolio</button>
+  </form>
+</section>
+{% endblock %}

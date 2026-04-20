@@ -1,0 +1,13 @@
+{% extends "_app_shell.html" %}
+
+{% set active_page = "fraud" if module_name == "Fraud Detection" else "portfolio" %}
+{% set page_heading = module_name %}
+{% set page_subtitle = "This module is the next implementation target after the live credit-risk flow." %}
+
+{% block app_content %}
+<div class="chart-card empty-state">
+  <p>{{ module_name }} is still using the old placeholder workflow.</p>
+  <p>Credit Risk is now the reference implementation for real auth, persistence, and analysis flow.</p>
+  <a href="{{ url_for('credit_risk') }}"><button class="btn-primary">Open Working Module</button></a>
+</div>
+{% endblock %}

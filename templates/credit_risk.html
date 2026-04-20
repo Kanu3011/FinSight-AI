@@ -1,0 +1,51 @@
+{% extends "_app_shell.html" %}
+
+{% set active_page = "credit-risk" %}
+{% set page_heading = "Credit Risk Analysis" %}
+{% set page_subtitle = "Run a single applicant check or upload a CSV with the full feature schema." %}
+
+{% block app_content %}
+<div class="grid-2 credit-grid">
+  <section class="chart-card">
+    <div class="section-title">Batch Analysis</div>
+    <p class="subtitle">Upload a CSV using the full German credit dataset feature columns.</p>
+    <form action="{{ url_for('credit_risk_batch') }}" method="post" enctype="multipart/form-data" class="stack-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <div class="upload-box">
+        <p>Expected columns: {{ feature_columns|join(', ') }}</p>
+        <input type="file" name="dataset" accept=".csv" required />
+      </div>
+      <button type="submit" class="btn-primary">Analyze CSV</button>
+    </form>
+  </section>
+
+  <section class="chart-card">
+    <div class="section-title">Individual Check</div>
+    <p class="subtitle">Enter a single application and receive a live risk score.</p>
+    <form action="{{ url_for('credit_risk_individual') }}" method="post" class="stack-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      <div class="form-grid">
+        {% for field_name in categorical_fields %}
+          <div class="field">
+            <label for="{{ field_name }}">{{ field_name.replace('_', ' ')|title }}</label>
+            <select id="{{ field_name }}" name="{{ field_name }}" required>
+              <option value="">Select</option>
+              {% for option in categorical_options[field_name] %}
+                <option value="{{ option }}">{{ option }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        {% endfor %}
+
+        {% for field_name in numeric_fields %}
+          <div class="field">
+            <label for="{{ field_name }}">{{ field_name.replace('_', ' ')|title }}</label>
+            <input id="{{ field_name }}" name="{{ field_name }}" type="number" step="any" required />
+          </div>
+        {% endfor %}
+      </div>
+      <button type="submit" class="btn-primary">Calculate Risk Score</button>
+    </form>
+  </section>
+</div>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block body %}
+<div class="dashboard-container">
+  <aside class="sidebar">
+    <div class="logo">FinSight AI Platform</div>
+    <a href="{{ url_for('dashboard') }}" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">Dashboard</a>
+    <a href="{{ url_for('credit_risk') }}" class="nav-item {% if active_page == 'credit-risk' %}active{% endif %}">Credit Risk</a>
+    <a href="{{ url_for('fraud') }}" class="nav-item {% if active_page == 'fraud' %}active{% endif %}">Fraud Detection</a>
+    <a href="{{ url_for('portfolio') }}" class="nav-item {% if active_page == 'portfolio' %}active{% endif %}">Portfolio Optimization</a>
+    <a href="{{ url_for('history') }}" class="nav-item {% if active_page == 'history' %}active{% endif %}">Analysis History</a>
+
+    <div class="sidebar-footer">
+      <form action="{{ url_for('logout') }}" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <button type="submit" class="logout-button">Logout</button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="topbar">
+      <div>
+        <div class="section-title">{{ page_heading }}</div>
+        <div class="subtitle">{{ page_subtitle }}</div>
+      </div>
+      <div class="user-info">
+        <strong>{{ current_user.full_name }}</strong>
+        <div>{{ current_user.email }}</div>
+      </div>
+    </div>
+
+    {% include "_flash_messages.html" %}
+    {% block app_content %}{% endblock %}
+  </main>
+</div>
+{% endblock %}
