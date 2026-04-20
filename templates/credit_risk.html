@@ -17,9 +17,6 @@
           <summary>View required columns</summary>
           <p>{{ feature_columns|join(', ') }}</p>
         </details>
-        <div class="actions inline-actions">
-          <a class="view-link" href="{{ url_for('credit_risk_template') }}">Download Template</a>
-        </div>
         <input type="file" name="dataset" accept=".csv" required />
       </div>
       <button type="submit" class="btn-primary">Analyze CSV</button>
