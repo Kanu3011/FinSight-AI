@@ -30,8 +30,11 @@ from werkzeug.utils import secure_filename
 from services.credit_risk_service import (
     CATEGORICAL_COLUMNS,
     FEATURE_COLUMNS,
+    FIELD_LABELS,
     NUMERIC_COLUMNS,
+    build_individual_payload,
     get_form_options,
+    get_individual_field_config,
     predict_batch,
     predict_one,
 )
@@ -868,13 +871,24 @@ def create_app() -> Flask:
             numeric_fields=NUMERIC_COLUMNS,
             feature_columns=FEATURE_COLUMNS,
             categorical_fields=CATEGORICAL_COLUMNS,
+            individual_fields=get_individual_field_config(),
+            field_labels=FIELD_LABELS,
         )
 
     @app.post("/credit-risk/analyze/individual")
     @login_required
     def credit_risk_individual():
-        payload = {column: (request.form.get(column) or "").strip() for column in FEATURE_COLUMNS}
-        if any(not value for value in payload.values()):
+        payload = {
+            key: value.strip() if isinstance(value, str) else value
+            for key, value in build_individual_payload(request.form.to_dict()).items()
+        }
+        required_fields = get_individual_field_config()
+        missing_labels = [
+            field["label"]
+            for field in required_fields
+            if not str(payload.get(field["name"], "")).strip()
+        ]
+        if missing_labels:
             flash("Please complete every field before running an analysis.", "error")
             return redirect(url_for("credit_risk"))
 

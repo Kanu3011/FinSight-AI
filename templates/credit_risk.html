@@ -8,11 +8,15 @@
 <div class="grid-2 credit-grid">
   <section class="chart-card">
     <div class="section-title">Batch Analysis</div>
-    <p class="subtitle">Upload a CSV using the full German credit dataset feature columns.</p>
+    <p class="subtitle">Upload a CSV using the credit-risk template columns.</p>
     <form action="{{ url_for('credit_risk_batch') }}" method="post" enctype="multipart/form-data" class="stack-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <div class="upload-box">
-        <p>Expected columns: {{ feature_columns|join(', ') }}</p>
+        <p>This upload expects the trained-model schema. If your file uses different headings, rename them to match the template before uploading.</p>
+        <details class="schema-details">
+          <summary>View required columns</summary>
+          <p>{{ feature_columns|join(', ') }}</p>
+        </details>
         <input type="file" name="dataset" accept=".csv" required />
       </div>
       <button type="submit" class="btn-primary">Analyze CSV</button>
@@ -21,26 +25,23 @@
 
   <section class="chart-card">
     <div class="section-title">Individual Check</div>
-    <p class="subtitle">Enter a single application and receive a live risk score.</p>
+    <p class="subtitle">Enter the core applicant details and the system will fill the less important model defaults automatically.</p>
     <form action="{{ url_for('credit_risk_individual') }}" method="post" class="stack-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <div class="form-grid">
-        {% for field_name in categorical_fields %}
+        {% for field in individual_fields %}
           <div class="field">
-            <label for="{{ field_name }}">{{ field_name.replace('_', ' ')|title }}</label>
-            <select id="{{ field_name }}" name="{{ field_name }}" required>
-              <option value="">Select</option>
-              {% for option in categorical_options[field_name] %}
-                <option value="{{ option }}">{{ option }}</option>
-              {% endfor %}
-            </select>
-          </div>
-        {% endfor %}
-
-        {% for field_name in numeric_fields %}
-          <div class="field">
-            <label for="{{ field_name }}">{{ field_name.replace('_', ' ')|title }}</label>
-            <input id="{{ field_name }}" name="{{ field_name }}" type="number" step="any" required />
+            <label for="{{ field.name }}">{{ field.label }}</label>
+            {% if field.type == "select" %}
+              <select id="{{ field.name }}" name="{{ field.name }}" required>
+                <option value="">Select</option>
+                {% for option in field.options %}
+                  <option value="{{ option }}">{{ option }}</option>
+                {% endfor %}
+              </select>
+            {% else %}
+              <input id="{{ field.name }}" name="{{ field.name }}" type="number" step="{{ field.step }}" required />
+            {% endif %}
           </div>
         {% endfor %}
       </div>

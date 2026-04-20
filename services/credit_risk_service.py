@@ -53,6 +53,55 @@ NUMERIC_COLUMNS = [
 
 CATEGORICAL_COLUMNS = [column for column in FEATURE_COLUMNS if column not in NUMERIC_COLUMNS]
 
+FIELD_LABELS = {
+    "status_account": "Account Status",
+    "month_duration": "Loan Duration (Months)",
+    "credit_history": "Credit History",
+    "purpose": "Loan Purpose",
+    "credit_amount": "Credit Amount",
+    "status_savings": "Savings Status",
+    "years_employment": "Employment Length",
+    "payment_to_income_ratio": "Payment To Income Ratio",
+    "status_and_sex": "Applicant Profile",
+    "secondary_obligor": "Secondary Obligor",
+    "residence_since": "Years At Current Address",
+    "collateral": "Collateral",
+    "age": "Age",
+    "other_installment_plans": "Other Installment Plans",
+    "housing": "Housing",
+    "n_credits": "Number Of Existing Credits",
+    "job": "Job",
+    "n_guarantors": "Number Of Dependants / Guarantors",
+    "telephone": "Telephone",
+    "is_foreign_worker": "Foreign Worker",
+}
+
+INDIVIDUAL_FORM_FIELDS = [
+    "status_account",
+    "month_duration",
+    "credit_history",
+    "purpose",
+    "credit_amount",
+    "status_savings",
+    "years_employment",
+    "payment_to_income_ratio",
+    "status_and_sex",
+    "age",
+    "housing",
+]
+
+INDIVIDUAL_DEFAULTS = {
+    "secondary_obligor": "none",
+    "residence_since": 2,
+    "collateral": "none",
+    "other_installment_plans": "none",
+    "n_credits": 1,
+    "job": "skilled employee/ official",
+    "n_guarantors": 1,
+    "telephone": "none",
+    "is_foreign_worker": "yes",
+}
+
 
 def _load_training_frame() -> pd.DataFrame:
     df = pd.read_csv(DATASET_PATH)
@@ -118,7 +167,38 @@ def load_bundle() -> dict[str, Any]:
 
 def get_form_options() -> dict[str, list[str]]:
     bundle = load_bundle()
-    return bundle["categorical_options"]
+    options = {key: list(value) for key, value in bundle["categorical_options"].items()}
+    profile_options = options.get("status_and_sex", [])
+    if "female : single" not in profile_options:
+        profile_options.append("female : single")
+        options["status_and_sex"] = sorted(profile_options)
+    return options
+
+
+def build_individual_payload(form_data: dict[str, Any]) -> dict[str, Any]:
+    payload = {field: (form_data.get(field) or "") for field in INDIVIDUAL_FORM_FIELDS}
+    payload.update(INDIVIDUAL_DEFAULTS)
+    return payload
+
+
+def get_individual_field_config() -> list[dict[str, Any]]:
+    options = get_form_options()
+    field_config: list[dict[str, Any]] = []
+
+    for field in INDIVIDUAL_FORM_FIELDS:
+        field_entry: dict[str, Any] = {
+            "name": field,
+            "label": FIELD_LABELS.get(field, field.replace("_", " ").title()),
+        }
+        if field in NUMERIC_COLUMNS:
+            field_entry["type"] = "number"
+            field_entry["step"] = "any"
+        else:
+            field_entry["type"] = "select"
+            field_entry["options"] = options[field]
+        field_config.append(field_entry)
+
+    return field_config
 
 
 def _prepare_frame(records: list[dict[str, Any]]) -> pd.DataFrame:
