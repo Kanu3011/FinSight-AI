@@ -26,4 +26,53 @@
     <button type="submit" class="btn-primary">Optimize Portfolio</button>
   </form>
 </section>
+
+{% if result %}
+  <section class="chart-card">
+    <div class="section-title">Latest Portfolio Result</div>
+    <div class="result-kpis">
+      <div class="card">
+        <div class="metric-title">Simulations</div>
+        <div class="metric-value">{{ result.simulations }}</div>
+      </div>
+      <div class="card">
+        <div class="metric-title">Best Return</div>
+        <div class="metric-value">{{ result.best_return }}%</div>
+      </div>
+      <div class="card">
+        <div class="metric-title">Best Volatility</div>
+        <div class="metric-value">{{ result.best_volatility }}%</div>
+      </div>
+      <div class="card">
+        <div class="metric-title">Best Sharpe</div>
+        <div class="metric-value">{{ result.best_sharpe_ratio }}</div>
+      </div>
+    </div>
+    <p class="subtitle">{{ result.recommendation }}</p>
+    {% if result.top_assets %}
+      <div class="table-wrap">
+        <table class="result-table">
+          <thead>
+            <tr>
+              <th>Asset</th>
+              <th>Weight</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in result.top_assets %}
+              <tr>
+                <td>{{ row.asset }}</td>
+                <td>{{ row.weight }}%</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+    <div class="actions detail-actions">
+      <a class="view-link" href="{{ url_for('analysis_detail', run_id=run_id) }}">Open Full Detail</a>
+      <a class="view-link" href="{{ url_for('analysis_report_json', run_id=run_id) }}">Download JSON Report</a>
+    </div>
+  </section>
+{% endif %}
 {% endblock %}

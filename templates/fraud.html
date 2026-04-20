@@ -21,4 +21,57 @@
     <button type="submit" class="btn-primary">Analyze Transactions</button>
   </form>
 </section>
+
+{% if result %}
+  <section class="chart-card">
+    <div class="section-title">Latest Fraud Result</div>
+    <div class="result-kpis">
+      <div class="card">
+        <div class="metric-title">Rows Processed</div>
+        <div class="metric-value">{{ result.rows_processed }}</div>
+      </div>
+      <div class="card">
+        <div class="metric-title">Flagged</div>
+        <div class="metric-value">{{ result.flagged_count }}</div>
+      </div>
+      <div class="card">
+        <div class="metric-title">Average Risk</div>
+        <div class="metric-value">{{ result.average_risk_score }}</div>
+      </div>
+      <div class="card">
+        <div class="metric-title">Max Risk</div>
+        <div class="metric-value">{{ result.max_risk_score }}</div>
+      </div>
+    </div>
+    <p class="subtitle">{{ result.recommendation }}</p>
+    {% if result.top_rows %}
+      <div class="table-wrap">
+        <table class="result-table">
+          <thead>
+            <tr>
+              <th>Predicted Label</th>
+              <th>Risk Score</th>
+              <th>Amount</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in result.top_rows[:10] %}
+              <tr>
+                <td>{{ row.predicted_label }}</td>
+                <td>{{ row.risk_score }}</td>
+                <td>{{ row.Amount }}</td>
+                <td>{{ row.Time }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+    <div class="actions detail-actions">
+      <a class="view-link" href="{{ url_for('analysis_detail', run_id=run_id) }}">Open Full Detail</a>
+      <a class="view-link" href="{{ url_for('analysis_report_json', run_id=run_id) }}">Download JSON Report</a>
+    </div>
+  </section>
+{% endif %}
 {% endblock %}

@@ -873,6 +873,9 @@ def create_app() -> Flask:
             categorical_fields=CATEGORICAL_COLUMNS,
             individual_fields=get_individual_field_config(),
             field_labels=FIELD_LABELS,
+            result=None,
+            run_id=None,
+            result_mode=None,
         )
 
     @app.post("/credit-risk/analyze/individual")
@@ -904,7 +907,18 @@ def create_app() -> Flask:
             return redirect(url_for("credit_risk"))
 
         flash("Credit-risk analysis completed successfully.", "success")
-        return redirect(url_for("analysis_detail", run_id=run_id))
+        return render_template(
+            "credit_risk.html",
+            categorical_options=get_form_options(),
+            numeric_fields=NUMERIC_COLUMNS,
+            feature_columns=FEATURE_COLUMNS,
+            categorical_fields=CATEGORICAL_COLUMNS,
+            individual_fields=get_individual_field_config(),
+            field_labels=FIELD_LABELS,
+            result=result,
+            run_id=run_id,
+            result_mode="individual",
+        )
 
     @app.post("/credit-risk/analyze/batch")
     @login_required
@@ -954,7 +968,18 @@ def create_app() -> Flask:
             return redirect(url_for("credit_risk"))
 
         flash("Batch credit-risk analysis completed successfully.", "success")
-        return redirect(url_for("analysis_detail", run_id=run_id))
+        return render_template(
+            "credit_risk.html",
+            categorical_options=get_form_options(),
+            numeric_fields=NUMERIC_COLUMNS,
+            feature_columns=FEATURE_COLUMNS,
+            categorical_fields=CATEGORICAL_COLUMNS,
+            individual_fields=get_individual_field_config(),
+            field_labels=FIELD_LABELS,
+            result=result,
+            run_id=run_id,
+            result_mode="batch",
+        )
 
     @app.get("/fraud")
     @login_required
@@ -962,6 +987,8 @@ def create_app() -> Flask:
         return render_template(
             "fraud.html",
             fraud_feature_columns=FRAUD_FEATURE_COLUMNS,
+            result=None,
+            run_id=None,
         )
 
     @app.post("/fraud/analyze/batch")
@@ -997,12 +1024,17 @@ def create_app() -> Flask:
             return redirect(url_for("fraud"))
 
         flash("Fraud analysis completed successfully.", "success")
-        return redirect(url_for("analysis_detail", run_id=run_id))
+        return render_template(
+            "fraud.html",
+            fraud_feature_columns=FRAUD_FEATURE_COLUMNS,
+            result=result,
+            run_id=run_id,
+        )
 
     @app.get("/portfolio")
     @login_required
     def portfolio():
-        return render_template("portfolio.html")
+        return render_template("portfolio.html", result=None, run_id=None)
 
     @app.post("/portfolio/analyze/batch")
     @login_required
@@ -1038,7 +1070,7 @@ def create_app() -> Flask:
             return redirect(url_for("portfolio"))
 
         flash("Portfolio optimization completed successfully.", "success")
-        return redirect(url_for("analysis_detail", run_id=run_id))
+        return render_template("portfolio.html", result=result, run_id=run_id)
 
     @app.get("/history")
     @login_required
