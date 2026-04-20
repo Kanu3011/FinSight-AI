@@ -25,7 +25,9 @@
 
   <section class="chart-card">
     <div class="section-title">Model Result</div>
-    {% if run.analysis_type == 'fraud' %}
+    {% if not result %}
+      <p class="subtitle">The analysis was saved, but the detailed result payload could not be loaded. Please return to history and try again.</p>
+    {% elif run.analysis_type == 'fraud' %}
       <div class="result-kpis">
         <div class="card">
           <div class="metric-title">Flagged Count</div>

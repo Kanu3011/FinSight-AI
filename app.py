@@ -1068,8 +1068,12 @@ def create_app() -> Flask:
         if not row:
             abort(404)
 
-        result_payload = _extract_result_payload(row)
-        return render_template("analysis_detail.html", run=row, result=result_payload)
+        try:
+            result_payload = _extract_result_payload(row)
+            return render_template("analysis_detail.html", run=row, result=result_payload)
+        except Exception:
+            flash("The analysis was saved, but the detail page could not be displayed right now. Please try again from history.", "error")
+            return redirect(url_for("history"))
 
     @app.get("/analysis/<int:run_id>/report.json")
     @login_required

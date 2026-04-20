@@ -205,11 +205,16 @@ def _prepare_frame(records: list[dict[str, Any]]) -> pd.DataFrame:
     frame = pd.DataFrame(records)
     missing_columns = [column for column in FEATURE_COLUMNS if column not in frame.columns]
     if missing_columns:
-        raise ValueError(f"Missing required columns: {', '.join(missing_columns)}")
+        raise ValueError(
+            "CSV format not recognised for credit-risk analysis. "
+            "Please use the credit-risk template columns."
+        )
 
     frame = frame[FEATURE_COLUMNS].copy()
     for column in NUMERIC_COLUMNS:
         frame[column] = pd.to_numeric(frame[column], errors="coerce")
+    if frame[NUMERIC_COLUMNS].isna().any().any():
+        raise ValueError("Some required numeric credit-risk fields are blank or invalid.")
     return frame
 
 

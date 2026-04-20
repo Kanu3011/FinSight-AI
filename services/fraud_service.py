@@ -92,13 +92,16 @@ def _prepare_frame(records: list[dict[str, Any]]) -> pd.DataFrame:
     frame = pd.DataFrame(records)
     missing_columns = [column for column in FEATURE_COLUMNS if column not in frame.columns]
     if missing_columns:
-        raise ValueError(f"Missing required columns: {', '.join(missing_columns)}")
+        raise ValueError(
+            "CSV format not recognised for fraud analysis. "
+            "Please use the fraud transaction template columns."
+        )
 
     frame = frame[FEATURE_COLUMNS].copy()
     for column in FEATURE_COLUMNS:
         frame[column] = pd.to_numeric(frame[column], errors="coerce")
     if frame.isna().any().any():
-        raise ValueError("The uploaded file contains blank or non-numeric fraud feature values.")
+        raise ValueError("The uploaded fraud file contains blank or non-numeric transaction feature values.")
     return frame
 
 
