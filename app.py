@@ -577,47 +577,65 @@ def _extract_result_payload(row: Any) -> dict[str, Any]:
 
 
 def _build_report_payload(row: Any, result_payload: dict[str, Any]) -> dict[str, Any]:
+    def _serialise(value: Any) -> Any:
+        if isinstance(value, datetime):
+            return value.isoformat()
+        return value
+
     report = {
         "generated_at": datetime.now(UTC).isoformat(),
         "run": {
-            "id": row["id"],
-            "analysis_type": row["analysis_type"],
-            "input_mode": row["input_mode"],
-            "status": row["status"],
-            "summary": row["summary"],
-            "created_at": row["created_at"],
-            "original_filename": row["original_filename"],
+            "id": _serialise(row["id"]),
+            "analysis_type": _serialise(row["analysis_type"]),
+            "input_mode": _serialise(row["input_mode"]),
+            "status": _serialise(row["status"]),
+            "summary": _serialise(row["summary"]),
+            "created_at": _serialise(row["created_at"]),
+            "original_filename": _serialise(row["original_filename"]),
         },
         "result": result_payload,
     }
 
     if row["analysis_type"] == "credit_risk":
         report["headline_metrics"] = {
-            "predicted_label": row["predicted_label"],
-            "risk_band": row["risk_band"],
-            "risk_score": row["risk_score"],
-            "probability_good": row["probability_good"],
-            "probability_bad": row["probability_bad"],
-            "recommendation": row["recommendation"],
+            "predicted_label": _serialise(row["predicted_label"]),
+            "risk_band": _serialise(row["risk_band"]),
+            "risk_score": _serialise(row["risk_score"]),
+            "probability_good": _serialise(row["probability_good"]),
+            "probability_bad": _serialise(row["probability_bad"]),
+            "recommendation": _serialise(row["recommendation"]),
         }
     elif row["analysis_type"] == "fraud":
         report["headline_metrics"] = {
-            "flagged_count": row["flagged_count"],
-            "clear_count": row["clear_count"],
-            "average_risk_score": row["average_risk_score"],
-            "max_risk_score": row["max_risk_score"],
-            "recommendation": row["fraud_recommendation"],
+            "flagged_count": _serialise(row["flagged_count"]),
+            "clear_count": _serialise(row["clear_count"]),
+            "average_risk_score": _serialise(row["average_risk_score"]),
+            "max_risk_score": _serialise(row["max_risk_score"]),
+            "recommendation": _serialise(row["fraud_recommendation"]),
         }
     else:
         report["headline_metrics"] = {
-            "simulations": row["simulations"],
-            "best_return": row["best_return"],
-            "best_volatility": row["best_volatility"],
-            "best_sharpe_ratio": row["best_sharpe_ratio"],
-            "recommendation": row["portfolio_recommendation"],
+            "simulations": _serialise(row["simulations"]),
+            "best_return": _serialise(row["best_return"]),
+            "best_volatility": _serialise(row["best_volatility"]),
+            "best_sharpe_ratio": _serialise(row["best_sharpe_ratio"]),
+            "recommendation": _serialise(row["portfolio_recommendation"]),
         }
 
     return report
+
+
+def _csv_download(filename: str, header: list[str], sample_row: Optional[list[Any]] = None):
+    csv_lines = [",".join(header)]
+    if sample_row:
+        csv_lines.append(",".join(str(value) for value in sample_row))
+    payload = ("\n".join(csv_lines) + "\n").encode("utf-8")
+    return send_file(
+        BytesIO(payload),
+        mimetype="text/csv",
+        as_attachment=True,
+        download_name=filename,
+    )
 
 
 def create_app() -> Flask:
@@ -878,6 +896,33 @@ def create_app() -> Flask:
             result_mode=None,
         )
 
+    @app.get("/credit-risk/template.csv")
+    @login_required
+    def credit_risk_template():
+        sample_row = [
+            "< 0 DM",
+            12,
+            "existing credits paid back duly till now",
+            "radio/television",
+            2500,
+            "< 100 DM",
+            "1 to < 4 years",
+            2,
+            "male : single",
+            "none",
+            2,
+            "none",
+            30,
+            "none",
+            "own",
+            1,
+            "skilled employee/ official",
+            1,
+            "none",
+            "yes",
+        ]
+        return _csv_download("credit_risk_template.csv", FEATURE_COLUMNS, sample_row)
+
     @app.post("/credit-risk/analyze/individual")
     @login_required
     def credit_risk_individual():
@@ -991,6 +1036,43 @@ def create_app() -> Flask:
             run_id=None,
         )
 
+    @app.get("/fraud/template.csv")
+    @login_required
+    def fraud_template():
+        sample_row = [
+            0,
+            -1.3598071336738,
+            -0.0727811733098497,
+            2.53634673796914,
+            1.37815522427443,
+            -0.338320769942518,
+            0.462387777762292,
+            0.239598554061257,
+            0.0986979012610507,
+            0.363786969611213,
+            0.0907941719789316,
+            -0.551599533260813,
+            -0.617800855762348,
+            -0.991389847235408,
+            -0.311169353699879,
+            1.46817697209427,
+            -0.470400525259478,
+            0.207971241929242,
+            0.0257905801985591,
+            0.403992960255733,
+            0.251412098239705,
+            -0.018306777944153,
+            0.277837575558899,
+            -0.110473910188767,
+            0.0669280749146731,
+            0.128539358273528,
+            -0.189114843888824,
+            0.133558376740387,
+            -0.0210530534538215,
+            149.62,
+        ]
+        return _csv_download("fraud_template.csv", FRAUD_FEATURE_COLUMNS, sample_row)
+
     @app.post("/fraud/analyze/batch")
     @login_required
     def fraud_batch():
@@ -1035,6 +1117,25 @@ def create_app() -> Flask:
     @login_required
     def portfolio():
         return render_template("portfolio.html", result=None, run_id=None)
+
+    @app.get("/portfolio/template.csv")
+    @login_required
+    def portfolio_template():
+        header = ["Date", "AssetA", "AssetB", "AssetC"]
+        rows = [
+            ["2024-01-01", 100, 120, 90],
+            ["2024-01-02", 101, 121, 91],
+            ["2024-01-03", 103, 119, 93],
+            ["2024-01-04", 104, 122, 94],
+            ["2024-01-05", 106, 124, 96],
+        ]
+        payload = "\n".join([",".join(header)] + [",".join(str(value) for value in row) for row in rows]) + "\n"
+        return send_file(
+            BytesIO(payload.encode("utf-8")),
+            mimetype="text/csv",
+            as_attachment=True,
+            download_name="portfolio_template.csv",
+        )
 
     @app.post("/portfolio/analyze/batch")
     @login_required

@@ -16,6 +16,9 @@
         <summary>View required columns</summary>
         <p>{{ fraud_feature_columns|join(', ') }}</p>
       </details>
+      <div class="actions inline-actions">
+        <a class="view-link" href="{{ url_for('fraud_template') }}">Download Template</a>
+      </div>
       <input type="file" name="dataset" accept=".csv" required />
     </div>
     <button type="submit" class="btn-primary">Analyze Transactions</button>
@@ -70,7 +73,7 @@
     {% endif %}
     <div class="actions detail-actions">
       <a class="view-link" href="{{ url_for('analysis_detail', run_id=run_id) }}">Open Full Detail</a>
-      <a class="view-link" href="{{ url_for('analysis_report_json', run_id=run_id) }}">Download JSON Report</a>
+      <a class="view-link" href="{{ url_for('analysis_report_json', run_id=run_id) }}">Download Report</a>
     </div>
   </section>
 {% endif %}

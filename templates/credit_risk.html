@@ -5,7 +5,7 @@
 {% set page_subtitle = "Run a single applicant check or upload a CSV with the full feature schema." %}
 
 {% block app_content %}
-<div class="grid-2 credit-grid">
+<div class="grid-2 credit-grid credit-page-grid">
   <section class="chart-card">
     <div class="section-title">Batch Analysis</div>
     <p class="subtitle">Upload a CSV using the credit-risk template columns.</p>
@@ -17,84 +17,89 @@
           <summary>View required columns</summary>
           <p>{{ feature_columns|join(', ') }}</p>
         </details>
+        <div class="actions inline-actions">
+          <a class="view-link" href="{{ url_for('credit_risk_template') }}">Download Template</a>
+        </div>
         <input type="file" name="dataset" accept=".csv" required />
       </div>
       <button type="submit" class="btn-primary">Analyze CSV</button>
     </form>
   </section>
 
-  <section class="chart-card">
-    <div class="section-title">Individual Check</div>
-    <p class="subtitle">Enter the core applicant details and the system will fill the less important model defaults automatically.</p>
-    <form action="{{ url_for('credit_risk_individual') }}" method="post" class="stack-form">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-      <div class="form-grid">
-        {% for field in individual_fields %}
-          <div class="field">
-            <label for="{{ field.name }}">{{ field.label }}</label>
-            {% if field.type == "select" %}
-              <select id="{{ field.name }}" name="{{ field.name }}" required>
-                <option value="">Select</option>
-                {% for option in field.options %}
-                  <option value="{{ option }}">{{ option }}</option>
-                {% endfor %}
-              </select>
-            {% else %}
-              <input id="{{ field.name }}" name="{{ field.name }}" type="number" step="{{ field.step }}" required />
-            {% endif %}
-          </div>
-        {% endfor %}
-      </div>
-      <button type="submit" class="btn-primary">Calculate Risk Score</button>
-    </form>
-  </section>
-</div>
+  <div class="stack-column">
+    <section class="chart-card">
+      <div class="section-title">Individual Check</div>
+      <p class="subtitle">Enter the core applicant details and the system will fill the less important model defaults automatically.</p>
+      <form action="{{ url_for('credit_risk_individual') }}" method="post" class="stack-form">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <div class="form-grid">
+          {% for field in individual_fields %}
+            <div class="field">
+              <label for="{{ field.name }}">{{ field.label }}</label>
+              {% if field.type == "select" %}
+                <select id="{{ field.name }}" name="{{ field.name }}" required>
+                  <option value="">Select</option>
+                  {% for option in field.options %}
+                    <option value="{{ option }}">{{ option }}</option>
+                  {% endfor %}
+                </select>
+              {% else %}
+                <input id="{{ field.name }}" name="{{ field.name }}" type="number" step="{{ field.step }}" required />
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+        <button type="submit" class="btn-primary">Calculate Risk Score</button>
+      </form>
+    </section>
 
-{% if result %}
-  <section class="chart-card">
-    <div class="section-title">Latest Credit-Risk Result</div>
-    <div class="result-kpis">
-      {% if result_mode == "batch" %}
-        <div class="card">
-          <div class="metric-title">Rows Processed</div>
-          <div class="metric-value">{{ result.rows_processed }}</div>
+    {% if result %}
+      <section class="chart-card result-inline-card">
+        <div class="section-title">Latest Credit-Risk Result</div>
+        <div class="result-kpis">
+          {% if result_mode == "batch" %}
+            <div class="card">
+              <div class="metric-title">Rows Processed</div>
+              <div class="metric-value">{{ result.rows_processed }}</div>
+            </div>
+            <div class="card">
+              <div class="metric-title">Average Risk</div>
+              <div class="metric-value">{{ result.average_risk_score }}</div>
+            </div>
+            <div class="card">
+              <div class="metric-title">Predicted Bad</div>
+              <div class="metric-value">{{ result.predicted_bad_count }}</div>
+            </div>
+            <div class="card">
+              <div class="metric-title">Predicted Good</div>
+              <div class="metric-value">{{ result.predicted_good_count }}</div>
+            </div>
+          {% else %}
+            <div class="card">
+              <div class="metric-title">Risk Band</div>
+              <div class="metric-value">{{ result.risk_band }}</div>
+            </div>
+            <div class="card">
+              <div class="metric-title">Risk Score</div>
+              <div class="metric-value">{{ result.risk_score }}</div>
+            </div>
+            <div class="card">
+              <div class="metric-title">Probability Good</div>
+              <div class="metric-value">{{ result.probability_good }}</div>
+            </div>
+            <div class="card">
+              <div class="metric-title">Probability Bad</div>
+              <div class="metric-value">{{ result.probability_bad }}</div>
+            </div>
+          {% endif %}
         </div>
-        <div class="card">
-          <div class="metric-title">Average Risk</div>
-          <div class="metric-value">{{ result.average_risk_score }}</div>
+        <p class="subtitle">{{ result.recommendation }}</p>
+        <div class="actions detail-actions">
+          <a class="view-link" href="{{ url_for('analysis_detail', run_id=run_id) }}">Open Full Detail</a>
+          <a class="view-link" href="{{ url_for('analysis_report_json', run_id=run_id) }}">Download Report</a>
         </div>
-        <div class="card">
-          <div class="metric-title">Predicted Bad</div>
-          <div class="metric-value">{{ result.predicted_bad_count }}</div>
-        </div>
-        <div class="card">
-          <div class="metric-title">Predicted Good</div>
-          <div class="metric-value">{{ result.predicted_good_count }}</div>
-        </div>
-      {% else %}
-        <div class="card">
-          <div class="metric-title">Risk Band</div>
-          <div class="metric-value">{{ result.risk_band }}</div>
-        </div>
-        <div class="card">
-          <div class="metric-title">Risk Score</div>
-          <div class="metric-value">{{ result.risk_score }}</div>
-        </div>
-        <div class="card">
-          <div class="metric-title">Probability Good</div>
-          <div class="metric-value">{{ result.probability_good }}</div>
-        </div>
-        <div class="card">
-          <div class="metric-title">Probability Bad</div>
-          <div class="metric-value">{{ result.probability_bad }}</div>
-        </div>
-      {% endif %}
-    </div>
-    <p class="subtitle">{{ result.recommendation }}</p>
-    <div class="actions detail-actions">
-      <a class="view-link" href="{{ url_for('analysis_detail', run_id=run_id) }}">Open Full Detail</a>
-      <a class="view-link" href="{{ url_for('analysis_report_json', run_id=run_id) }}">Download JSON Report</a>
-    </div>
-  </section>
-{% endif %}
+      </section>
+    {% endif %}
+  </div>
+</div>
 {% endblock %}

@@ -91,6 +91,91 @@
   </section>
 </div>
 
+{% if run.analysis_type == 'credit_risk' %}
+  <section class="chart-card">
+    <div class="section-title">Risk Profile</div>
+    <div class="visual-grid">
+      <div class="detail-item">
+        <strong>Risk Score Meter</strong>
+        <div class="meter-track">
+          <div class="meter-fill meter-danger" style="width: {{ run.risk_score or 0 }}%"></div>
+        </div>
+        <div>{{ run.risk_score }} / 100</div>
+      </div>
+      <div class="detail-item">
+        <strong>Probability Split</strong>
+        <div class="split-bars">
+          <div class="split-row">
+            <span>Good</span>
+            <div class="meter-track"><div class="meter-fill meter-safe" style="width: {{ (run.probability_good or 0) * 100 }}%"></div></div>
+            <span>{{ ((run.probability_good or 0) * 100)|round(2) }}%</span>
+          </div>
+          <div class="split-row">
+            <span>Bad</span>
+            <div class="meter-track"><div class="meter-fill meter-danger" style="width: {{ (run.probability_bad or 0) * 100 }}%"></div></div>
+            <span>{{ ((run.probability_bad or 0) * 100)|round(2) }}%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+{% elif run.analysis_type == 'fraud' %}
+  <section class="chart-card">
+    <div class="section-title">Fraud Overview</div>
+    <div class="visual-grid">
+      <div class="detail-item">
+        <strong>Flagged Share</strong>
+        {% set total_transactions = (run.flagged_count or 0) + (run.clear_count or 0) %}
+        {% set flagged_share = ((run.flagged_count or 0) / total_transactions * 100) if total_transactions else 0 %}
+        <div class="meter-track">
+          <div class="meter-fill meter-danger" style="width: {{ flagged_share }}%"></div>
+        </div>
+        <div>{{ flagged_share|round(2) }}% of scanned rows flagged</div>
+      </div>
+      <div class="detail-item">
+        <strong>Risk Levels</strong>
+        <div class="split-row">
+          <span>Average</span>
+          <div class="meter-track"><div class="meter-fill meter-warning" style="width: {{ run.average_risk_score or 0 }}%"></div></div>
+          <span>{{ run.average_risk_score }}</span>
+        </div>
+        <div class="split-row">
+          <span>Maximum</span>
+          <div class="meter-track"><div class="meter-fill meter-danger" style="width: {{ run.max_risk_score or 0 }}%"></div></div>
+          <span>{{ run.max_risk_score }}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+{% elif run.analysis_type == 'portfolio' %}
+  <section class="chart-card">
+    <div class="section-title">Allocation Overview</div>
+    <div class="visual-grid">
+      <div class="detail-item">
+        <strong>Return vs Volatility</strong>
+        <div class="split-row">
+          <span>Return</span>
+          <div class="meter-track"><div class="meter-fill meter-safe" style="width: {{ [run.best_return or 0, 100]|min }}%"></div></div>
+          <span>{{ run.best_return }}%</span>
+        </div>
+        <div class="split-row">
+          <span>Volatility</span>
+          <div class="meter-track"><div class="meter-fill meter-warning" style="width: {{ [run.best_volatility or 0, 100]|min }}%"></div></div>
+          <span>{{ run.best_volatility }}%</span>
+        </div>
+      </div>
+      <div class="detail-item">
+        <strong>Sharpe Ratio</strong>
+        {% set sharpe_width = ((run.best_sharpe_ratio or 0) * 25) %}
+        <div class="meter-track">
+          <div class="meter-fill meter-safe" style="width: {{ [sharpe_width, 100]|min }}%"></div>
+        </div>
+        <div>{{ run.best_sharpe_ratio }}</div>
+      </div>
+    </div>
+  </section>
+{% endif %}
+
 {% if run.analysis_type == 'credit_risk' and result.input_snapshot %}
   <section class="chart-card">
     <div class="section-title">Input Snapshot</div>
@@ -183,6 +268,32 @@
             <tr>
               <td>{{ row.asset }}</td>
               <td>{{ row.weight }}%</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+{% endif %}
+
+{% if run.analysis_type == 'portfolio' and result.frontier_preview %}
+  <section class="chart-card">
+    <div class="section-title">Efficient Frontier Preview</div>
+    <div class="table-wrap">
+      <table class="result-table">
+        <thead>
+          <tr>
+            <th>Expected Return</th>
+            <th>Volatility</th>
+            <th>Sharpe Ratio</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in result.frontier_preview[:12] %}
+            <tr>
+              <td>{{ row.expected_return }}%</td>
+              <td>{{ row.volatility }}%</td>
+              <td>{{ row.sharpe_ratio }}</td>
             </tr>
           {% endfor %}
         </tbody>

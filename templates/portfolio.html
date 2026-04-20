@@ -22,6 +22,9 @@
     </div>
     <div class="upload-box">
       <p>Minimum practical format: one date column plus at least two asset columns with positive price values.</p>
+      <div class="actions inline-actions">
+        <a class="view-link" href="{{ url_for('portfolio_template') }}">Download Template</a>
+      </div>
     </div>
     <button type="submit" class="btn-primary">Optimize Portfolio</button>
   </form>
@@ -71,7 +74,7 @@
     {% endif %}
     <div class="actions detail-actions">
       <a class="view-link" href="{{ url_for('analysis_detail', run_id=run_id) }}">Open Full Detail</a>
-      <a class="view-link" href="{{ url_for('analysis_report_json', run_id=run_id) }}">Download JSON Report</a>
+      <a class="view-link" href="{{ url_for('analysis_report_json', run_id=run_id) }}">Download Report</a>
     </div>
   </section>
 {% endif %}
