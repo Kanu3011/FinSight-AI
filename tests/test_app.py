@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+import app as app_module
 
 from conftest import login, register
 from services.credit_risk_service import CATEGORICAL_COLUMNS, NUMERIC_COLUMNS, get_form_options
@@ -168,3 +169,16 @@ def test_forgot_password_flow(client):
     login_response = login(client, "reset@example.com", password="NewPassword123!")
     assert login_response.status_code == 200
     assert b"Dashboard" in login_response.data
+
+
+def test_extract_result_payload_accepts_decoded_json():
+    payload = app_module._extract_result_payload(
+        {
+            "analysis_type": "fraud",
+            "result_json": None,
+            "fraud_result_json": {"flagged_count": 2, "top_rows": []},
+            "portfolio_result_json": None,
+        }
+    )
+
+    assert payload["flagged_count"] == 2

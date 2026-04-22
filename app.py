@@ -601,7 +601,15 @@ def _extract_result_payload(row: Any) -> dict[str, Any]:
         raw_payload = row["fraud_result_json"]
     else:
         raw_payload = row["portfolio_result_json"]
-    return json.loads(raw_payload) if raw_payload else {}
+    if not raw_payload:
+        return {}
+    if isinstance(raw_payload, dict):
+        return raw_payload
+    if isinstance(raw_payload, (bytes, bytearray)):
+        raw_payload = raw_payload.decode("utf-8")
+    if isinstance(raw_payload, str):
+        return json.loads(raw_payload)
+    return dict(raw_payload)
 
 
 def _build_report_payload(row: Any, result_payload: dict[str, Any]) -> dict[str, Any]:
