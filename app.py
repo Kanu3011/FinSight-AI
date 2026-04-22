@@ -26,6 +26,9 @@ from flask_limiter.util import get_remote_address
 from flask_wtf.csrf import CSRFProtect
 from psycopg.errors import OperationalError, UniqueViolation
 from psycopg.rows import dict_row
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import LETTER
+from reportlab.pdfgen import canvas
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
@@ -659,6 +662,179 @@ def _build_report_payload(row: Any, result_payload: dict[str, Any]) -> dict[str,
         }
 
     return report
+
+
+def _render_report_pdf(row: Any, result_payload: dict[str, Any]) -> bytes:
+    buffer = BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=LETTER)
+    width, height = LETTER
+    margin_x = 48
+    y = height - 52
+
+    def ensure_room(min_y: int = 90):
+        nonlocal y
+        if y < min_y:
+            pdf.showPage()
+            y = height - 52
+
+    def add_title(text: str):
+        nonlocal y
+        pdf.setFont("Helvetica-Bold", 18)
+        pdf.drawString(margin_x, y, text)
+        y -= 22
+
+    def add_subtitle(text: str):
+        nonlocal y
+        pdf.setFont("Helvetica", 10)
+        pdf.setFillColor(colors.HexColor("#4B5563"))
+        pdf.drawString(margin_x, y, text)
+        pdf.setFillColor(colors.black)
+        y -= 18
+
+    def add_section(title: str):
+        nonlocal y
+        ensure_room(110)
+        y -= 4
+        pdf.setFont("Helvetica-Bold", 13)
+        pdf.drawString(margin_x, y, title)
+        y -= 16
+
+    def add_line(label: str, value: Any):
+        nonlocal y
+        ensure_room()
+        pdf.setFont("Helvetica-Bold", 10)
+        pdf.drawString(margin_x, y, f"{label}:")
+        pdf.setFont("Helvetica", 10)
+        pdf.drawString(margin_x + 128, y, str(value))
+        y -= 14
+
+    def add_bar(label: str, value: float, max_value: float = 100.0, bar_color=colors.HexColor("#14B8A6")):
+        nonlocal y
+        ensure_room(115)
+        safe_max = max(float(max_value), 1.0)
+        fill_width = max(0.0, min(300.0, (float(value) / safe_max) * 300.0))
+        pdf.setFont("Helvetica", 10)
+        pdf.drawString(margin_x, y, f"{label} ({round(float(value), 2)})")
+        y -= 10
+        pdf.setFillColor(colors.HexColor("#E5E7EB"))
+        pdf.roundRect(margin_x, y - 8, 300, 10, 5, stroke=0, fill=1)
+        pdf.setFillColor(bar_color)
+        pdf.roundRect(margin_x, y - 8, fill_width, 10, 5, stroke=0, fill=1)
+        pdf.setFillColor(colors.black)
+        y -= 18
+
+    def add_table(title: str, rows: list[dict[str, Any]], columns: list[tuple[str, str]], max_rows: int = 8):
+        nonlocal y
+        if not rows:
+            return
+        add_section(title)
+        x_positions = [margin_x, margin_x + 100, margin_x + 195, margin_x + 290, margin_x + 390, margin_x + 470]
+        pdf.setFont("Helvetica-Bold", 9)
+        for index, (_, label) in enumerate(columns):
+            if index < len(x_positions):
+                pdf.drawString(x_positions[index], y, label)
+        y -= 10
+        pdf.line(margin_x, y, width - margin_x, y)
+        y -= 12
+        pdf.setFont("Helvetica", 8)
+        for row_item in rows[:max_rows]:
+            ensure_room()
+            for index, (key, _) in enumerate(columns):
+                if index < len(x_positions):
+                    pdf.drawString(x_positions[index], y, str(row_item.get(key, ""))[:18])
+            y -= 12
+
+    add_title("FinSight AI Analysis Report")
+    add_subtitle(
+        f"Run #{row['id']} • {str(row['analysis_type']).replace('_', ' ').title()} • Generated {datetime.now(UTC).strftime('%Y-%m-%d %H:%M UTC')}"
+    )
+
+    add_section("Run Summary")
+    add_line("Analysis Type", str(row["analysis_type"]).replace("_", " ").title())
+    add_line("Input Mode", str(row["input_mode"]).title())
+    add_line("Status", str(row["status"]).title())
+    add_line("Created At", row["created_at"])
+    if row["original_filename"]:
+        add_line("Source File", row["original_filename"])
+    if row["summary"]:
+        add_line("Summary", row["summary"])
+
+    if row["analysis_type"] == "credit_risk":
+        add_section("Credit Risk Highlights")
+        add_line("Risk Band", row["risk_band"])
+        add_line("Predicted Label", row["predicted_label"])
+        add_line("Recommendation", row["recommendation"])
+        add_bar("Risk Score", row["risk_score"] or 0, 100, colors.HexColor("#EF4444"))
+        add_bar("Probability Good %", (row["probability_good"] or 0) * 100, 100, colors.HexColor("#10B981"))
+        add_bar("Probability Bad %", (row["probability_bad"] or 0) * 100, 100, colors.HexColor("#F97316"))
+        if result_payload.get("input_snapshot"):
+            add_section("Input Snapshot")
+            for key, value in list(result_payload["input_snapshot"].items())[:10]:
+                add_line(key.replace("_", " ").title(), value)
+        if result_payload.get("top_rows"):
+            add_table(
+                "Highest-Risk Rows",
+                result_payload["top_rows"],
+                [
+                    ("predicted_label", "Label"),
+                    ("risk_score", "Risk"),
+                    ("credit_amount", "Amount"),
+                    ("month_duration", "Duration"),
+                    ("age", "Age"),
+                    ("purpose", "Purpose"),
+                ],
+            )
+    elif row["analysis_type"] == "fraud":
+        total_transactions = (row["flagged_count"] or 0) + (row["clear_count"] or 0)
+        flagged_share = ((row["flagged_count"] or 0) / total_transactions * 100) if total_transactions else 0
+        add_section("Fraud Detection Highlights")
+        add_line("Recommendation", row["fraud_recommendation"])
+        add_bar("Flagged Transactions", row["flagged_count"] or 0, max(total_transactions, 1), colors.HexColor("#EF4444"))
+        add_bar("Flagged Share %", flagged_share, 100, colors.HexColor("#F97316"))
+        add_bar("Average Risk", row["average_risk_score"] or 0, 100, colors.HexColor("#EAB308"))
+        add_bar("Maximum Risk", row["max_risk_score"] or 0, 100, colors.HexColor("#DC2626"))
+        if result_payload.get("top_rows"):
+            add_table(
+                "Flagged Transactions",
+                result_payload["top_rows"],
+                [
+                    ("predicted_label", "Label"),
+                    ("risk_score", "Risk"),
+                    ("Amount", "Amount"),
+                    ("Time", "Time"),
+                    ("V14", "V14"),
+                    ("V17", "V17"),
+                ],
+            )
+    else:
+        add_section("Portfolio Highlights")
+        add_line("Recommendation", row["portfolio_recommendation"])
+        add_bar("Best Return %", row["best_return"] or 0, 100, colors.HexColor("#10B981"))
+        add_bar("Best Volatility %", row["best_volatility"] or 0, 100, colors.HexColor("#F59E0B"))
+        add_bar("Best Sharpe Ratio", row["best_sharpe_ratio"] or 0, 5, colors.HexColor("#0EA5E9"))
+        if result_payload.get("recommended_allocation"):
+            allocation_rows = [{"asset": asset, "weight": weight} for asset, weight in result_payload["recommended_allocation"].items()]
+            add_table(
+                "Recommended Allocation",
+                allocation_rows,
+                [("asset", "Asset"), ("weight", "Weight %")],
+                max_rows=10,
+            )
+        if result_payload.get("frontier_preview"):
+            add_table(
+                "Efficient Frontier Preview",
+                result_payload["frontier_preview"],
+                [
+                    ("expected_return", "Return %"),
+                    ("volatility", "Volatility %"),
+                    ("sharpe_ratio", "Sharpe"),
+                ],
+                max_rows=10,
+            )
+
+    pdf.showPage()
+    pdf.save()
+    return buffer.getvalue()
 
 
 def _create_password_reset_token(user_id: int) -> str:
@@ -1415,22 +1591,21 @@ def create_app() -> Flask:
             flash("The analysis was saved, but the detail page could not be displayed right now. Please try again from history.", "error")
             return redirect(url_for("history"))
 
-    @app.get("/analysis/<int:run_id>/report.json")
+    @app.get("/analysis/<int:run_id>/report.pdf")
     @login_required
-    def analysis_report_json(run_id: int):
+    def analysis_report_pdf(run_id: int):
         row = _fetch_analysis_row(run_id, int(current_user.id))
         if not row:
             abort(404)
 
         result_payload = _extract_result_payload(row)
-        report_payload = _build_report_payload(row, result_payload)
-        report_bytes = json.dumps(report_payload, indent=2).encode("utf-8")
+        report_bytes = _render_report_pdf(row, result_payload)
 
         return send_file(
             BytesIO(report_bytes),
-            mimetype="application/json",
+            mimetype="application/pdf",
             as_attachment=True,
-            download_name=f"analysis_{run_id}_report.json",
+            download_name=f"analysis_{run_id}_report.pdf",
         )
 
     return app

@@ -18,7 +18,7 @@
       {% endif %}
     </div>
     <div class="actions detail-actions">
-      <a class="view-link" href="{{ url_for('analysis_report_json', run_id=run.id) }}">Download Report</a>
+      <a class="view-link" href="{{ url_for('analysis_report_pdf', run_id=run.id) }}">Download Report</a>
       <a class="view-link" href="{{ url_for('history') }}">Back to History</a>
     </div>
   </section>
@@ -119,6 +119,27 @@
       </div>
     </div>
   </section>
+  <section class="chart-card">
+    <div class="section-title">Decision Snapshot</div>
+    <div class="mini-chart-grid">
+      <div class="visual-panel">
+        <div class="donut-shell danger-shell" style="--chart-angle: {{ (run.risk_score or 0) * 3.6 }}deg;">
+          <div class="donut-core">{{ run.risk_score }}%</div>
+        </div>
+        <div class="visual-caption">Overall risk intensity</div>
+      </div>
+      <div class="visual-panel">
+        <div class="stacked-bar">
+          <span class="stack-good" style="width: {{ (run.probability_good or 0) * 100 }}%"></span>
+          <span class="stack-bad" style="width: {{ (run.probability_bad or 0) * 100 }}%"></span>
+        </div>
+        <div class="legend-row">
+          <span><i class="legend-dot safe-dot"></i>Good {{ ((run.probability_good or 0) * 100)|round(1) }}%</span>
+          <span><i class="legend-dot danger-dot"></i>Bad {{ ((run.probability_bad or 0) * 100)|round(1) }}%</span>
+        </div>
+      </div>
+    </div>
+  </section>
 {% elif run.analysis_type == 'fraud' %}
   <section class="chart-card">
     <div class="section-title">Fraud Overview</div>
@@ -147,6 +168,34 @@
       </div>
     </div>
   </section>
+  <section class="chart-card">
+    <div class="section-title">Fraud Visual Snapshot</div>
+    {% set total_transactions = (run.flagged_count or 0) + (run.clear_count or 0) %}
+    {% set safe_share = ((run.clear_count or 0) / total_transactions * 100) if total_transactions else 0 %}
+    {% set flagged_share = ((run.flagged_count or 0) / total_transactions * 100) if total_transactions else 0 %}
+    <div class="mini-chart-grid">
+      <div class="visual-panel">
+        <div class="stacked-bar tall-bar">
+          <span class="stack-good" style="width: {{ safe_share }}%"></span>
+          <span class="stack-bad" style="width: {{ flagged_share }}%"></span>
+        </div>
+        <div class="legend-row">
+          <span><i class="legend-dot safe-dot"></i>Clear {{ safe_share|round(1) }}%</span>
+          <span><i class="legend-dot danger-dot"></i>Flagged {{ flagged_share|round(1) }}%</span>
+        </div>
+      </div>
+      <div class="visual-panel risk-columns">
+        <div class="risk-column">
+          <div class="column-bar warning-bar" style="height: {{ run.average_risk_score or 0 }}%"></div>
+          <span>Average</span>
+        </div>
+        <div class="risk-column">
+          <div class="column-bar danger-bar" style="height: {{ run.max_risk_score or 0 }}%"></div>
+          <span>Maximum</span>
+        </div>
+      </div>
+    </div>
+  </section>
 {% elif run.analysis_type == 'portfolio' %}
   <section class="chart-card">
     <div class="section-title">Allocation Overview</div>
@@ -171,6 +220,38 @@
           <div class="meter-fill meter-safe" style="width: {{ [sharpe_width, 100]|min }}%"></div>
         </div>
         <div>{{ run.best_sharpe_ratio }}</div>
+      </div>
+    </div>
+  </section>
+  <section class="chart-card">
+    <div class="section-title">Portfolio Visual Snapshot</div>
+    <div class="mini-chart-grid">
+      <div class="visual-panel">
+        <div class="risk-columns">
+          <div class="risk-column">
+            <div class="column-bar safe-bar" style="height: {{ [run.best_return or 0, 100]|min }}%"></div>
+            <span>Return</span>
+          </div>
+          <div class="risk-column">
+            <div class="column-bar warning-bar" style="height: {{ [run.best_volatility or 0, 100]|min }}%"></div>
+            <span>Volatility</span>
+          </div>
+          <div class="risk-column">
+            <div class="column-bar info-bar" style="height: {{ [[(run.best_sharpe_ratio or 0) * 25, 100]|min, 0]|max }}%"></div>
+            <span>Sharpe</span>
+          </div>
+        </div>
+      </div>
+      <div class="visual-panel">
+        {% if result.top_assets %}
+          {% for row in result.top_assets[:5] %}
+            <div class="allocation-row">
+              <span>{{ row.asset }}</span>
+              <div class="meter-track compact-track"><div class="meter-fill meter-safe" style="width: {{ row.weight }}%"></div></div>
+              <span>{{ row.weight }}%</span>
+            </div>
+          {% endfor %}
+        {% endif %}
       </div>
     </div>
   </section>

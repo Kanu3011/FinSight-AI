@@ -132,13 +132,13 @@ def test_analysis_report_download(auth_client):
     payload.update({field: "1" for field in NUMERIC_COLUMNS})
 
     response = auth_client.post("/credit-risk/analyze/individual", data=payload, follow_redirects=True)
-    match = re.search(rb'href="(/analysis/\d+/report\.json)"', response.data)
+    match = re.search(rb'href="(/analysis/\d+/report\.pdf)"', response.data)
     assert match is not None
     report_response = auth_client.get(match.group(1).decode("utf-8"), follow_redirects=False)
 
     assert report_response.status_code == 200
-    assert report_response.mimetype == "application/json"
-    assert b'"analysis_type": "credit_risk"' in report_response.data
+    assert report_response.mimetype == "application/pdf"
+    assert report_response.data.startswith(b"%PDF")
 
 
 def test_forgot_password_flow(client):

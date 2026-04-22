@@ -70,7 +70,7 @@
     {% endif %}
     <div class="actions detail-actions">
       <a class="view-link" href="{{ url_for('analysis_detail', run_id=run_id) }}">Open Full Detail</a>
-      <a class="view-link" href="{{ url_for('analysis_report_json', run_id=run_id) }}">Download Report</a>
+      <a class="view-link" href="{{ url_for('analysis_report_pdf', run_id=run_id) }}">Download Report</a>
     </div>
   </section>
 {% endif %}
