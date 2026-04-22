@@ -3,7 +3,10 @@
 {% block body %}
 <div class="dashboard-container">
   <aside class="sidebar">
-    <div class="logo">FinSight AI Platform</div>
+    <div class="logo logo-block">
+      <img src="{{ url_for('static', filename='logo.png') }}" alt="FinSight AI logo" class="brand-logo brand-logo-sidebar" />
+      <span>FinSight AI Platform</span>
+    </div>
     <a href="{{ url_for('dashboard') }}" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">Dashboard</a>
     <a href="{{ url_for('credit_risk') }}" class="nav-item {% if active_page == 'credit-risk' %}active{% endif %}">Credit Risk</a>
     <a href="{{ url_for('fraud') }}" class="nav-item {% if active_page == 'fraud' %}active{% endif %}">Fraud Detection</a>
