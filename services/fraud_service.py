@@ -7,9 +7,9 @@ from pathlib import Path
 from typing import Any
 
 import pandas as pd
-from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+from xgboost import XGBClassifier
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -69,7 +69,20 @@ def _train_bundle() -> dict[str, Any]:
     pipeline = Pipeline(
         steps=[
             ("scaler", StandardScaler()),
-            ("classifier", LogisticRegression(max_iter=2000, class_weight="balanced")),
+            (
+                "classifier",
+                XGBClassifier(
+                    n_estimators=300,
+                    max_depth=6,
+                    learning_rate=0.08,
+                    subsample=0.9,
+                    colsample_bytree=0.9,
+                    eval_metric="logloss",
+                    random_state=42,
+                    n_jobs=1,
+                    scale_pos_weight=float((y == 0).sum()) / float((y == 1).sum()),
+                ),
+            ),
         ]
     )
     pipeline.fit(X, y)
