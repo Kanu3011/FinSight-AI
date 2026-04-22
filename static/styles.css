@@ -103,9 +103,9 @@ body {
 }
 
 .brand-logo-home {
-    width: 52px;
-    height: 52px;
-    filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.28));
+    width: 76px;
+    height: 76px;
+    filter: drop-shadow(0 0 16px rgba(56, 189, 248, 0.34));
 }
 
 .logo-text {
@@ -122,10 +122,10 @@ body {
 }
 
 .brand-logo-sidebar {
-    width: 42px;
-    height: 42px;
-    flex: 0 0 42px;
-    filter: drop-shadow(0 0 10px rgba(45, 212, 191, 0.28));
+    width: 58px;
+    height: 58px;
+    flex: 0 0 58px;
+    filter: drop-shadow(0 0 14px rgba(45, 212, 191, 0.34));
 }
 
 .main-nav {
