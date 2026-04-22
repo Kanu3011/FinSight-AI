@@ -84,12 +84,12 @@
   {% if recent_runs %}
     <div class="history-list">
       {% for run in recent_runs %}
-        <div class="history-item">
-          <div class="history-details">
+        <div class="history-item activity-item">
+          <div class="history-details activity-main">
             <div class="file-name">{{ run.summary or run.analysis_type|replace('_', ' ')|title }}</div>
             <div class="run-id">{{ run.analysis_type|replace('_', ' ')|title }} • {{ run.input_mode|title }}</div>
           </div>
-          <div class="status-info">
+          <div class="status-info activity-metric">
             {% if run.analysis_type == 'fraud' %}
               {{ run.flagged_count }} flagged
             {% elif run.analysis_type == 'portfolio' %}
@@ -101,7 +101,7 @@
             {% endif %}
             {% if run.analysis_type == 'credit_risk' and run.risk_score is not none %}<div>{{ run.risk_score }} / 100</div>{% endif %}
           </div>
-          <div class="actions">
+          <div class="actions activity-action">
             <a class="view-link" href="{{ url_for('analysis_detail', run_id=run.id) }}">Open</a>
           </div>
         </div>

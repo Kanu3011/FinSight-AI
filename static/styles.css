@@ -111,7 +111,8 @@ body {
 .logo-text {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--foreground);
+    color: #67e8f9;
+    text-shadow: 0 0 10px rgba(34, 211, 238, 0.45), 0 0 22px rgba(59, 130, 246, 0.25);
 }
 
 .logo-block {
@@ -1821,6 +1822,13 @@ body, html {
       gap: 1rem;
     }
 
+    .activity-item {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 220px 92px;
+      align-items: center;
+      gap: 1.25rem;
+    }
+
     .history-info {
       display: flex;
       align-items: center;
@@ -1870,6 +1878,19 @@ body, html {
       color: #17f9a3;
       font-size: 0.95rem;
       flex-shrink: 0;
+    }
+
+    .activity-main {
+      min-width: 0;
+    }
+
+    .activity-metric {
+      width: 220px;
+      justify-self: stretch;
+    }
+
+    .activity-action {
+      justify-self: end;
     }
 
     .actions {
@@ -2234,6 +2255,45 @@ body, html {
     gap: 1rem;
     align-items: center;
     justify-items: center;
+}
+
+.hover-panel {
+    position: relative;
+    overflow: hidden;
+}
+
+.hover-note {
+    color: var(--muted-foreground);
+    font-size: 0.84rem;
+    text-align: center;
+}
+
+.hover-card {
+    position: absolute;
+    inset: auto 12px 12px 12px;
+    padding: 0.9rem 1rem;
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.94);
+    border: 1px solid rgba(103, 232, 249, 0.25);
+    color: var(--foreground);
+    box-shadow: 0 18px 40px rgba(2, 6, 23, 0.55);
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    display: grid;
+    gap: 0.35rem;
+    justify-items: start;
+    text-align: left;
+}
+
+.hover-panel:hover .hover-card {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.hover-panel:hover .hover-note {
+    opacity: 0.2;
 }
 
 .donut-shell {

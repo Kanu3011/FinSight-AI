@@ -122,13 +122,13 @@
   <section class="chart-card">
     <div class="section-title">Decision Snapshot</div>
     <div class="mini-chart-grid">
-      <div class="visual-panel">
+      <div class="visual-panel hover-panel">
         <div class="donut-shell danger-shell" style="--chart-angle: {{ (run.risk_score or 0) * 3.6 }}deg;">
           <div class="donut-core">{{ run.risk_score }}%</div>
         </div>
         <div class="visual-caption">Overall risk intensity</div>
       </div>
-      <div class="visual-panel">
+      <div class="visual-panel hover-panel">
         <div class="stacked-bar">
           <span class="stack-good" style="width: {{ (run.probability_good or 0) * 100 }}%"></span>
           <span class="stack-bad" style="width: {{ (run.probability_bad or 0) * 100 }}%"></span>
@@ -183,8 +183,15 @@
           <span><i class="legend-dot safe-dot"></i>Clear {{ safe_share|round(1) }}%</span>
           <span><i class="legend-dot danger-dot"></i>Flagged {{ flagged_share|round(1) }}%</span>
         </div>
+        <div class="hover-note">Hover for the full split</div>
+        <div class="hover-card">
+          <div><strong>Total scanned:</strong> {{ total_transactions }}</div>
+          <div><strong>Clear rows:</strong> {{ run.clear_count or 0 }}</div>
+          <div><strong>Flagged rows:</strong> {{ run.flagged_count or 0 }}</div>
+          <div><strong>Flagged share:</strong> {{ flagged_share|round(2) }}%</div>
+        </div>
       </div>
-      <div class="visual-panel risk-columns">
+      <div class="visual-panel risk-columns hover-panel">
         <div class="risk-column">
           <div class="column-bar warning-bar" style="height: {{ run.average_risk_score or 0 }}%"></div>
           <span>Average</span>
@@ -192,6 +199,12 @@
         <div class="risk-column">
           <div class="column-bar danger-bar" style="height: {{ run.max_risk_score or 0 }}%"></div>
           <span>Maximum</span>
+        </div>
+        <div class="hover-note">Hover for exact risk values</div>
+        <div class="hover-card">
+          <div><strong>Average risk:</strong> {{ run.average_risk_score }}</div>
+          <div><strong>Maximum risk:</strong> {{ run.max_risk_score }}</div>
+          <div><strong>Recommendation:</strong> {{ run.fraud_recommendation }}</div>
         </div>
       </div>
     </div>
@@ -226,7 +239,7 @@
   <section class="chart-card">
     <div class="section-title">Portfolio Visual Snapshot</div>
     <div class="mini-chart-grid">
-      <div class="visual-panel">
+      <div class="visual-panel hover-panel">
         <div class="risk-columns">
           <div class="risk-column">
             <div class="column-bar safe-bar" style="height: {{ [run.best_return or 0, 100]|min }}%"></div>
@@ -241,8 +254,15 @@
             <span>Sharpe</span>
           </div>
         </div>
+        <div class="hover-note">Hover for exact portfolio metrics</div>
+        <div class="hover-card">
+          <div><strong>Best return:</strong> {{ run.best_return }}%</div>
+          <div><strong>Best volatility:</strong> {{ run.best_volatility }}%</div>
+          <div><strong>Best Sharpe:</strong> {{ run.best_sharpe_ratio }}</div>
+          <div><strong>Simulations:</strong> {{ run.simulations }}</div>
+        </div>
       </div>
-      <div class="visual-panel">
+      <div class="visual-panel hover-panel">
         {% if result.top_assets %}
           {% for row in result.top_assets[:5] %}
             <div class="allocation-row">
@@ -252,6 +272,14 @@
             </div>
           {% endfor %}
         {% endif %}
+        <div class="hover-note">Hover for allocation summary</div>
+        <div class="hover-card">
+          <div><strong>Assets used:</strong> {{ result.assets|length if result.assets else 0 }}</div>
+          {% if result.top_assets %}
+            <div><strong>Largest weight:</strong> {{ result.top_assets[0].asset }} - {{ result.top_assets[0].weight }}%</div>
+          {% endif %}
+          <div><strong>Risk-free rate:</strong> {{ result.risk_free_rate }}%</div>
+        </div>
       </div>
     </div>
   </section>
