@@ -2,22 +2,22 @@
 
 {% set active_page = "credit-risk" %}
 {% set page_heading = "Credit Risk Analysis" %}
-{% set page_subtitle = "Run a single applicant check or upload a CSV with the full feature schema." %}
+{% set page_subtitle = "Run a single applicant check or upload a CSV or Excel file with the full feature schema." %}
 
 {% block app_content %}
 <div class="grid-2 credit-grid credit-page-grid">
   <section class="chart-card">
     <div class="section-title">Batch Analysis</div>
-    <p class="subtitle">Upload a CSV using the credit-risk template columns.</p>
+    <p class="subtitle">Upload a CSV or Excel workbook using the credit-risk template columns.</p>
     <form action="{{ url_for('credit_risk_batch') }}" method="post" enctype="multipart/form-data" class="stack-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       <div class="upload-box">
-        <p>This upload expects the trained-model schema. If your file uses different headings, rename them to match the template before uploading.</p>
+        <p>This upload accepts CSV or Excel (.xlsx) files. If your file uses different headings, rename them to match the template before uploading. For Excel files, the first sheet is used.</p>
         <details class="schema-details">
           <summary>View required columns</summary>
           <p>{{ feature_columns|join(', ') }}</p>
         </details>
-        <input type="file" name="dataset" accept=".csv" required />
+        <input type="file" name="dataset" accept=".csv,.xlsx" required />
       </div>
       <button type="submit" class="btn-primary">Analyze CSV</button>
     </form>

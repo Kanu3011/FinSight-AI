@@ -38,6 +38,19 @@ def test_credit_risk_individual_flow(auth_client):
     assert b"Risk Score" in response.data
 
 
+def test_credit_risk_excel_batch_flow(auth_client, credit_xlsx):
+    response = auth_client.post(
+        "/credit-risk/analyze/batch",
+        data={"dataset": (credit_xlsx, "credit_sample.xlsx")},
+        content_type="multipart/form-data",
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"Latest Credit-Risk Result" in response.data
+    assert b"Rows Processed" in response.data
+
+
 def test_fraud_batch_flow(auth_client, fraud_csv):
     response = auth_client.post(
         "/fraud/analyze/batch",
@@ -50,6 +63,19 @@ def test_fraud_batch_flow(auth_client, fraud_csv):
     assert b"Latest Fraud Result" in response.data
     assert b"Flagged" in response.data
     assert b"Open Full Detail" in response.data
+
+
+def test_fraud_excel_flow(auth_client, fraud_xlsx):
+    response = auth_client.post(
+        "/fraud/analyze/batch",
+        data={"dataset": (fraud_xlsx, "fraud_sample.xlsx")},
+        content_type="multipart/form-data",
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"Latest Fraud Result" in response.data
+    assert b"Download Report" in response.data
 
 
 def test_portfolio_batch_flow(auth_client, portfolio_csv):
@@ -66,6 +92,22 @@ def test_portfolio_batch_flow(auth_client, portfolio_csv):
     assert response.status_code == 200
     assert b"Latest Portfolio Result" in response.data
     assert b"Best Sharpe" in response.data
+
+
+def test_portfolio_excel_flow(auth_client, portfolio_xlsx):
+    response = auth_client.post(
+        "/portfolio/analyze/batch",
+        data={
+            "risk_free_rate": "0.02",
+            "dataset": (portfolio_xlsx, "portfolio_sample.xlsx"),
+        },
+        content_type="multipart/form-data",
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"Latest Portfolio Result" in response.data
+    assert b"Download Report" in response.data
 
 
 def test_history_is_scoped_to_current_user(client):

@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Optional, Sequence
 
 import psycopg
+import pandas as pd
 from flask import Flask, abort, flash, redirect, render_template, request, send_file, url_for
 from flask_login import (
     LoginManager,
@@ -47,6 +48,7 @@ from services.portfolio_service import optimize_portfolio
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = Path(os.environ.get("FINSIGHT_DB_PATH", str(BASE_DIR / "finsight.db")))
 DATABASE_URL = os.environ.get("DATABASE_URL")
+SUPPORTED_TABULAR_EXTENSIONS = {".csv", ".xlsx"}
 
 
 def _is_postgres() -> bool:
@@ -726,6 +728,31 @@ def _csv_download(filename: str, header: list[str], sample_row: Optional[list[An
     )
 
 
+def _prepare_tabular_upload(
+    uploaded_file,
+    *,
+    empty_message: str,
+    invalid_message: str,
+) -> tuple[str, bytes]:
+    if not uploaded_file or not uploaded_file.filename:
+        raise ValueError(empty_message)
+
+    filename = secure_filename(uploaded_file.filename)
+    extension = Path(filename).suffix.lower()
+    if extension not in SUPPORTED_TABULAR_EXTENSIONS:
+        raise ValueError(invalid_message)
+
+    file_bytes = uploaded_file.read()
+    if extension == ".csv":
+        return filename, file_bytes
+
+    frame = pd.read_excel(BytesIO(file_bytes))
+    if frame.empty and len(frame.columns) == 0:
+        raise ValueError("The uploaded Excel file is empty.")
+    csv_bytes = frame.to_csv(index=False).encode("utf-8")
+    return filename, csv_bytes
+
+
 def _safe_error_redirect():
     path = request.path or ""
     if path.startswith("/credit-risk"):
@@ -1140,18 +1167,18 @@ def create_app() -> Flask:
     @app.post("/credit-risk/analyze/batch")
     @login_required
     def credit_risk_batch():
-        uploaded_file = request.files.get("dataset")
-        if not uploaded_file or not uploaded_file.filename:
-            flash("Please choose a CSV file to analyze.", "error")
-            return redirect(url_for("credit_risk"))
-
-        filename = secure_filename(uploaded_file.filename)
-        if not filename.lower().endswith(".csv"):
-            flash("Only CSV files are supported for batch analysis.", "error")
+        try:
+            filename, dataset_bytes = _prepare_tabular_upload(
+                request.files.get("dataset"),
+                empty_message="Please choose a CSV or Excel file to analyze.",
+                invalid_message="Only CSV and Excel (.xlsx) files are supported for batch analysis.",
+            )
+        except ValueError as error:
+            flash(str(error), "error")
             return redirect(url_for("credit_risk"))
 
         try:
-            result = predict_batch(uploaded_file.read())
+            result = predict_batch(dataset_bytes)
             summary = (
                 f"Batch file analyzed: {result['rows_processed']} rows, "
                 f"{result['predicted_bad_count']} predicted bad"
@@ -1248,18 +1275,18 @@ def create_app() -> Flask:
     @app.post("/fraud/analyze/batch")
     @login_required
     def fraud_batch():
-        uploaded_file = request.files.get("dataset")
-        if not uploaded_file or not uploaded_file.filename:
-            flash("Please choose a CSV file to analyze.", "error")
-            return redirect(url_for("fraud"))
-
-        filename = secure_filename(uploaded_file.filename)
-        if not filename.lower().endswith(".csv"):
-            flash("Only CSV files are supported for fraud analysis.", "error")
+        try:
+            filename, dataset_bytes = _prepare_tabular_upload(
+                request.files.get("dataset"),
+                empty_message="Please choose a CSV or Excel file to analyze.",
+                invalid_message="Only CSV and Excel (.xlsx) files are supported for fraud analysis.",
+            )
+        except ValueError as error:
+            flash(str(error), "error")
             return redirect(url_for("fraud"))
 
         try:
-            result = predict_fraud_batch(uploaded_file.read())
+            result = predict_fraud_batch(dataset_bytes)
             summary = (
                 f"Fraud scan completed: {result['rows_processed']} rows, "
                 f"{result['flagged_count']} flagged"
@@ -1312,19 +1339,19 @@ def create_app() -> Flask:
     @app.post("/portfolio/analyze/batch")
     @login_required
     def portfolio_batch():
-        uploaded_file = request.files.get("dataset")
-        if not uploaded_file or not uploaded_file.filename:
-            flash("Please choose a CSV file to optimize.", "error")
-            return redirect(url_for("portfolio"))
-
-        filename = secure_filename(uploaded_file.filename)
-        if not filename.lower().endswith(".csv"):
-            flash("Only CSV files are supported for portfolio optimization.", "error")
+        try:
+            filename, dataset_bytes = _prepare_tabular_upload(
+                request.files.get("dataset"),
+                empty_message="Please choose a CSV or Excel file to optimize.",
+                invalid_message="Only CSV and Excel (.xlsx) files are supported for portfolio optimization.",
+            )
+        except ValueError as error:
+            flash(str(error), "error")
             return redirect(url_for("portfolio"))
 
         try:
             risk_free_rate = float(request.form.get("risk_free_rate", "0.02") or "0.02")
-            result = optimize_portfolio(uploaded_file.read(), risk_free_rate=risk_free_rate)
+            result = optimize_portfolio(dataset_bytes, risk_free_rate=risk_free_rate)
             summary = (
                 f"Portfolio optimized: {len(result['assets'])} assets, "
                 f"Sharpe {result['best_sharpe_ratio']}"

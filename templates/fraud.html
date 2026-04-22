@@ -2,21 +2,21 @@
 
 {% set active_page = "fraud" %}
 {% set page_heading = "Fraud Detection" %}
-{% set page_subtitle = "Upload a transaction CSV and score the records for likely fraud." %}
+{% set page_subtitle = "Upload a transaction CSV or Excel workbook and score the records for likely fraud." %}
 
 {% block app_content %}
 <section class="chart-card">
   <div class="section-title">Batch Transaction Scan</div>
-  <p class="subtitle">Upload a CSV that matches the fraud transaction template used by the trained model.</p>
+  <p class="subtitle">Upload a CSV or Excel workbook that matches the fraud transaction template used by the trained model.</p>
   <form action="{{ url_for('fraud_batch') }}" method="post" enctype="multipart/form-data" class="stack-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
     <div class="upload-box">
-      <p>The fraud model needs the transaction feature columns from the original credit-card dataset.</p>
+      <p>The fraud model needs the transaction feature columns from the original credit-card dataset. Excel uploads use the first sheet.</p>
       <details class="schema-details">
         <summary>View required columns</summary>
         <p>{{ fraud_feature_columns|join(', ') }}</p>
       </details>
-      <input type="file" name="dataset" accept=".csv" required />
+      <input type="file" name="dataset" accept=".csv,.xlsx" required />
     </div>
     <button type="submit" class="btn-primary">Analyze Transactions</button>
   </form>

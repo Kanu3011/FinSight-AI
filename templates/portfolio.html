@@ -2,18 +2,18 @@
 
 {% set active_page = "portfolio" %}
 {% set page_heading = "Portfolio Optimization" %}
-{% set page_subtitle = "Upload historical asset prices and generate a maximum-Sharpe allocation." %}
+{% set page_subtitle = "Upload historical asset prices from CSV or Excel and generate a maximum-Sharpe allocation." %}
 
 {% block app_content %}
 <section class="chart-card">
   <div class="section-title">Portfolio Optimizer</div>
-  <p class="subtitle">Upload a CSV where the first column is a date or index and the remaining columns are asset price series.</p>
+  <p class="subtitle">Upload a CSV or Excel workbook where the first column is a date or index and the remaining columns are asset price series.</p>
   <form action="{{ url_for('portfolio_batch') }}" method="post" enctype="multipart/form-data" class="stack-form">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
     <div class="form-grid">
       <div class="field">
-        <label for="dataset">Portfolio CSV</label>
-        <input id="dataset" type="file" name="dataset" accept=".csv" required />
+        <label for="dataset">Portfolio File</label>
+        <input id="dataset" type="file" name="dataset" accept=".csv,.xlsx" required />
       </div>
       <div class="field">
         <label for="risk_free_rate">Risk-Free Rate</label>
@@ -21,7 +21,7 @@
       </div>
     </div>
     <div class="upload-box">
-      <p>Minimum practical format: one date column plus at least two asset columns with positive price values.</p>
+      <p>Minimum practical format: one date column plus at least two asset columns with positive price values. Excel uploads use the first sheet.</p>
     </div>
     <button type="submit" class="btn-primary">Optimize Portfolio</button>
   </form>
