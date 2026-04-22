@@ -2510,3 +2510,85 @@ body, html {
     .auth-footer a:hover {
       text-decoration: underline;
     }
+
+.site-footer {
+    border-top: 1px solid var(--border);
+    background: rgba(6, 11, 23, 0.92);
+    backdrop-filter: blur(10px);
+}
+
+.footer-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.footer-copy {
+    color: var(--muted-foreground);
+    font-size: 0.92rem;
+}
+
+.footer-links {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.footer-links a {
+    color: #67e8f9;
+    text-decoration: none;
+    font-size: 0.92rem;
+}
+
+.footer-links a:hover {
+    text-decoration: underline;
+}
+
+.policy-shell {
+    min-height: calc(100vh - 90px);
+    display: grid;
+    place-items: center;
+    padding: 3rem 1.5rem;
+}
+
+.policy-card {
+    width: min(860px, 100%);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    padding: 2rem;
+    box-shadow: var(--shadow-card);
+    display: grid;
+    gap: 1rem;
+}
+
+.policy-card h1 {
+    font-size: 2rem;
+    margin: 0;
+}
+
+.policy-card h2 {
+    font-size: 1.15rem;
+    margin: 0.5rem 0 0;
+    color: #67e8f9;
+}
+
+.policy-card p {
+    margin: 0;
+    color: var(--muted-foreground);
+    line-height: 1.7;
+}
+
+.policy-intro {
+    font-size: 1rem;
+}
+
+.policy-actions {
+    margin-top: 1rem;
+}

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}Privacy Policy - FinSight AI{% endblock %}
+
+{% block body %}
+<main class="policy-shell">
+  <section class="policy-card">
+    <h1>Privacy Policy</h1>
+    <p class="policy-intro">This is a simple academic privacy notice for the FinSight AI final-year project demonstration website.</p>
+
+    <h2>What Data We Store</h2>
+    <p>FinSight AI stores account information such as your name, email address, encrypted password, and the analysis results you submit while using the platform.</p>
+
+    <h2>Why We Store It</h2>
+    <p>This information is used to authenticate users, keep analysis history separate for each account, and display saved reports inside the dashboard.</p>
+
+    <h2>Cookies</h2>
+    <p>The site uses essential session cookies required for sign-in and secure account access. It does not include advertising or marketing trackers in this demo version.</p>
+
+    <h2>Project Scope</h2>
+    <p>This website is an academic project and not a commercial financial service. Users should not treat the outputs as professional financial, fraud, or credit advice.</p>
+
+    <div class="policy-actions">
+      <a class="view-link" href="{{ url_for('home') }}">Back to Home</a>
+    </div>
+  </section>
+</main>
+{% endblock %}

@@ -1012,6 +1012,14 @@ def create_app() -> Flask:
     def home():
         return render_template("index.html")
 
+    @app.get("/privacy")
+    def privacy():
+        return render_template("privacy.html")
+
+    @app.get("/terms")
+    def terms():
+        return render_template("terms.html")
+
     @app.get("/signin")
     def signin():
         if current_user.is_authenticated:

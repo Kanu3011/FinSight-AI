@@ -8,5 +8,14 @@
 </head>
 <body class="{% block body_class %}{% endblock %}">
   {% block body %}{% endblock %}
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-copy">© 2026 FinSight AI | Final Year Project Demo</div>
+      <div class="footer-links">
+        <a href="{{ url_for('privacy') }}">Privacy Policy</a>
+        <a href="{{ url_for('terms') }}">Terms of Use</a>
+      </div>
+    </div>
+  </footer>
 </body>
 </html>
