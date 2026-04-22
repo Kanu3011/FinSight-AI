@@ -1,22 +1,28 @@
 from __future__ import annotations
 
 import io
+import os
 import sys
 from pathlib import Path
 
 import pytest
 
 
-PROJECT_DIR = Path(r"C:\Users\3011k\OneDrive\Desktop\website")
+PROJECT_DIR = Path(r"C:\Users\3011k\OneDrive\Desktop\website - Clean")
 if str(PROJECT_DIR) not in sys.path:
     sys.path.insert(0, str(PROJECT_DIR))
-
-import app as app_module
 
 
 @pytest.fixture()
 def app(tmp_path, monkeypatch):
     test_db_path = tmp_path / "test_finsight.db"
+    monkeypatch.setenv("FINSIGHT_DB_PATH", str(test_db_path))
+    monkeypatch.setenv("DATABASE_URL", "")
+
+    import importlib
+    import app as app_module
+
+    app_module = importlib.reload(app_module)
     monkeypatch.setattr(app_module, "DB_PATH", test_db_path)
     monkeypatch.setattr(app_module, "DATABASE_URL", None)
 

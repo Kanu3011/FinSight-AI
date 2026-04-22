@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+
 from conftest import login, register
 from services.credit_risk_service import CATEGORICAL_COLUMNS, NUMERIC_COLUMNS, get_form_options
 
@@ -32,7 +34,7 @@ def test_credit_risk_individual_flow(auth_client):
     response = auth_client.post("/credit-risk/analyze/individual", data=payload, follow_redirects=True)
 
     assert response.status_code == 200
-    assert b"Analysis Detail" in response.data
+    assert b"Latest Credit-Risk Result" in response.data
     assert b"Risk Score" in response.data
 
 
@@ -45,8 +47,9 @@ def test_fraud_batch_flow(auth_client, fraud_csv):
     )
 
     assert response.status_code == 200
-    assert b"Flagged Count" in response.data
-    assert b"Flagged Transactions" in response.data
+    assert b"Latest Fraud Result" in response.data
+    assert b"Flagged" in response.data
+    assert b"Open Full Detail" in response.data
 
 
 def test_portfolio_batch_flow(auth_client, portfolio_csv):
@@ -61,7 +64,7 @@ def test_portfolio_batch_flow(auth_client, portfolio_csv):
     )
 
     assert response.status_code == 200
-    assert b"Recommended Allocation" in response.data
+    assert b"Latest Portfolio Result" in response.data
     assert b"Best Sharpe" in response.data
 
 
@@ -85,9 +88,41 @@ def test_analysis_report_download(auth_client):
     payload = {field: options[field][0] for field in CATEGORICAL_COLUMNS}
     payload.update({field: "1" for field in NUMERIC_COLUMNS})
 
-    response = auth_client.post("/credit-risk/analyze/individual", data=payload, follow_redirects=False)
-    report_response = auth_client.get(response.headers["Location"] + "/report.json", follow_redirects=False)
+    response = auth_client.post("/credit-risk/analyze/individual", data=payload, follow_redirects=True)
+    match = re.search(rb'href="(/analysis/\d+/report\.json)"', response.data)
+    assert match is not None
+    report_response = auth_client.get(match.group(1).decode("utf-8"), follow_redirects=False)
 
     assert report_response.status_code == 200
     assert report_response.mimetype == "application/json"
     assert b'"analysis_type": "credit_risk"' in report_response.data
+
+
+def test_forgot_password_flow(client):
+    register(client, "reset@example.com", password="Password123!")
+
+    response = client.post(
+        "/forgot-password",
+        data={"email": "reset@example.com"},
+        follow_redirects=True,
+    )
+
+    assert response.status_code == 200
+    assert b"Reset Link" in response.data
+
+    match = re.search(rb"/reset-password/([A-Za-z0-9_\-]+)", response.data)
+    assert match is not None
+    token = match.group(1).decode("utf-8")
+
+    reset_response = client.post(
+        f"/reset-password/{token}",
+        data={"password": "NewPassword123!", "confirm_password": "NewPassword123!"},
+        follow_redirects=True,
+    )
+
+    assert reset_response.status_code == 200
+    assert b"Your password has been reset" in reset_response.data
+
+    login_response = login(client, "reset@example.com", password="NewPassword123!")
+    assert login_response.status_code == 200
+    assert b"Dashboard" in login_response.data

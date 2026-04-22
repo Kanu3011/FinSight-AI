@@ -2018,6 +2018,40 @@ body, html {
     width: auto;
 }
 
+.auth-links {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: -0.5rem;
+    margin-bottom: -0.25rem;
+}
+
+.auth-links a,
+.reset-preview a {
+    color: var(--primary);
+    text-decoration: none;
+}
+
+.auth-links a:hover,
+.reset-preview a:hover {
+    text-decoration: underline;
+}
+
+.auth-helper {
+    margin: -0.75rem 0 1.25rem;
+    color: var(--muted-foreground);
+    line-height: 1.6;
+}
+
+.reset-preview {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: rgba(37, 99, 235, 0.08);
+    text-align: left;
+    word-break: break-word;
+}
+
 .logout-button,
 .view-link {
     background: transparent;

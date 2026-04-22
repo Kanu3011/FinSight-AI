@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import json
 import os
+import secrets
 import sqlite3
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
@@ -44,7 +45,7 @@ from services.portfolio_service import optimize_portfolio
 
 
 BASE_DIR = Path(__file__).resolve().parent
-DB_PATH = BASE_DIR / "finsight.db"
+DB_PATH = Path(os.environ.get("FINSIGHT_DB_PATH", str(BASE_DIR / "finsight.db")))
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 
@@ -200,6 +201,18 @@ def init_db() -> None:
         )
         db_exec(
             """
+            CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                id BIGSERIAL PRIMARY KEY,
+                user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                token TEXT NOT NULL UNIQUE,
+                expires_at TIMESTAMPTZ NOT NULL,
+                used_at TIMESTAMPTZ,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            )
+            """
+        )
+        db_exec(
+            """
             CREATE TABLE IF NOT EXISTS fraud_results (
                 id BIGSERIAL PRIMARY KEY,
                 analysis_run_id BIGINT NOT NULL UNIQUE REFERENCES analysis_runs(id) ON DELETE CASCADE,
@@ -271,6 +284,19 @@ def init_db() -> None:
                 result_json TEXT NOT NULL,
                 created_at TEXT NOT NULL DEFAULT (datetime('now')),
                 FOREIGN KEY (analysis_run_id) REFERENCES analysis_runs(id) ON DELETE CASCADE
+            )
+            """
+        )
+        db_exec(
+            """
+            CREATE TABLE IF NOT EXISTS password_reset_tokens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                token TEXT NOT NULL UNIQUE,
+                expires_at TEXT NOT NULL,
+                used_at TEXT,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
             """
         )
@@ -625,6 +651,68 @@ def _build_report_payload(row: Any, result_payload: dict[str, Any]) -> dict[str,
     return report
 
 
+def _create_password_reset_token(user_id: int) -> str:
+    token = secrets.token_urlsafe(32)
+    expiry_iso = (datetime.now(UTC) + timedelta(hours=1)).replace(microsecond=0).isoformat()
+
+    if _is_postgres():
+        db_exec(
+            "UPDATE password_reset_tokens SET used_at = NOW() WHERE user_id = %s AND used_at IS NULL",
+            (user_id,),
+        )
+        db_exec(
+            """
+            INSERT INTO password_reset_tokens (user_id, token, expires_at)
+            VALUES (%s, %s, %s)
+            """,
+            (user_id, token, expiry_iso),
+        )
+    else:
+        db_exec(
+            "UPDATE password_reset_tokens SET used_at = datetime('now') WHERE user_id = ? AND used_at IS NULL",
+            (user_id,),
+        )
+        db_exec(
+            """
+            INSERT INTO password_reset_tokens (user_id, token, expires_at)
+            VALUES (?, ?, ?)
+            """,
+            (user_id, token, expiry_iso),
+        )
+    return token
+
+
+def _get_password_reset_row(token: str):
+    query = """
+        SELECT prt.id, prt.user_id, prt.token, prt.expires_at, prt.used_at, u.email, u.full_name
+        FROM password_reset_tokens prt
+        JOIN users u ON u.id = prt.user_id
+        WHERE prt.token = {placeholder}
+    """
+    placeholder = "%s" if _is_postgres() else "?"
+    return db_fetchone(query.format(placeholder=placeholder), (token,))
+
+
+def _token_is_valid(reset_row: Any) -> bool:
+    if not reset_row or reset_row["used_at"]:
+        return False
+    expires_at = reset_row["expires_at"]
+    if isinstance(expires_at, str):
+        expiry_dt = datetime.fromisoformat(expires_at.replace("Z", "+00:00"))
+    else:
+        expiry_dt = expires_at
+    if expiry_dt.tzinfo is None:
+        expiry_dt = expiry_dt.replace(tzinfo=UTC)
+    return expiry_dt > datetime.now(UTC)
+
+
+def _mark_reset_token_used(token: str) -> None:
+    if _is_postgres():
+        db_exec("UPDATE password_reset_tokens SET used_at = NOW() WHERE token = %s", (token,))
+    else:
+        db_exec("UPDATE password_reset_tokens SET used_at = datetime('now') WHERE token = ?", (token,))
+
+
 def _csv_download(filename: str, header: list[str], sample_row: Optional[list[Any]] = None):
     csv_lines = [",".join(header)]
     if sample_row:
@@ -636,6 +724,21 @@ def _csv_download(filename: str, header: list[str], sample_row: Optional[list[An
         as_attachment=True,
         download_name=filename,
     )
+
+
+def _safe_error_redirect():
+    path = request.path or ""
+    if path.startswith("/credit-risk"):
+        return redirect(url_for("credit_risk"))
+    if path.startswith("/fraud"):
+        return redirect(url_for("fraud"))
+    if path.startswith("/portfolio"):
+        return redirect(url_for("portfolio"))
+    if path.startswith("/analysis"):
+        return redirect(url_for("history"))
+    if current_user.is_authenticated:
+        return redirect(url_for("dashboard"))
+    return redirect(url_for("home"))
 
 
 def create_app() -> Flask:
@@ -671,6 +774,16 @@ def create_app() -> Flask:
     def load_user(user_id: str) -> Optional[User]:
         return User.get_by_id(user_id)
 
+    @app.errorhandler(413)
+    def request_entity_too_large(_error):
+        flash("The uploaded file is too large for this deployment. Please upload a smaller CSV sample.", "error")
+        return _safe_error_redirect(), 413
+
+    @app.errorhandler(500)
+    def internal_server_error(_error):
+        flash("Something went wrong while processing that request. Please try again.", "error")
+        return _safe_error_redirect(), 500
+
     @app.get("/healthz")
     def healthz():
         try:
@@ -693,6 +806,65 @@ def create_app() -> Flask:
         if current_user.is_authenticated:
             return redirect(url_for("dashboard"))
         return render_template("signin.html")
+
+    @app.get("/forgot-password")
+    def forgot_password():
+        if current_user.is_authenticated:
+            return redirect(url_for("dashboard"))
+        return render_template("forgot_password.html", reset_link=None)
+
+    @app.post("/forgot-password")
+    @limiter.limit("5/minute;20/day")
+    def forgot_password_post():
+        email = (request.form.get("email") or "").strip().lower()
+        if not email:
+            flash("Please enter your email address.", "error")
+            return redirect(url_for("forgot_password"))
+
+        user = User.get_by_email(email)
+        reset_link = None
+        if user:
+            token = _create_password_reset_token(int(user.id))
+            reset_link = url_for("reset_password", token=token, _external=True)
+
+        flash("If that email exists, a reset link has been generated below.", "success")
+        return render_template("forgot_password.html", reset_link=reset_link)
+
+    @app.get("/reset-password/<token>")
+    def reset_password(token: str):
+        if current_user.is_authenticated:
+            return redirect(url_for("dashboard"))
+        reset_row = _get_password_reset_row(token)
+        if not _token_is_valid(reset_row):
+            flash("This reset link is invalid or has expired.", "error")
+            return redirect(url_for("forgot_password"))
+        return render_template("reset_password.html", token=token)
+
+    @app.post("/reset-password/<token>")
+    @limiter.limit("10/minute;50/day")
+    def reset_password_post(token: str):
+        reset_row = _get_password_reset_row(token)
+        if not _token_is_valid(reset_row):
+            flash("This reset link is invalid or has expired.", "error")
+            return redirect(url_for("forgot_password"))
+
+        password = request.form.get("password") or ""
+        confirm_password = request.form.get("confirm_password") or ""
+        if len(password) < 8:
+            flash("Password must be at least 8 characters long.", "error")
+            return redirect(url_for("reset_password", token=token))
+        if password != confirm_password:
+            flash("Passwords do not match.", "error")
+            return redirect(url_for("reset_password", token=token))
+
+        password_hash = generate_password_hash(password)
+        if _is_postgres():
+            db_exec("UPDATE users SET password_hash = %s WHERE id = %s", (password_hash, int(reset_row["user_id"])))
+        else:
+            db_exec("UPDATE users SET password_hash = ? WHERE id = ?", (password_hash, int(reset_row["user_id"])))
+        _mark_reset_token_used(token)
+        flash("Your password has been reset. Please sign in.", "success")
+        return redirect(url_for("signin"))
 
     @app.post("/login")
     @limiter.limit("10/minute;100/day")
