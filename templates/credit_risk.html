@@ -21,6 +21,35 @@
       </div>
       <button type="submit" class="btn-primary">Analyze CSV</button>
     </form>
+
+    {% if result and result_mode == "batch" %}
+      <section class="chart-card result-inline-card">
+        <div class="section-title">Latest Credit-Risk Result</div>
+        <div class="result-kpis">
+          <div class="card">
+            <div class="metric-title">Rows Processed</div>
+            <div class="metric-value">{{ result.rows_processed }}</div>
+          </div>
+          <div class="card">
+            <div class="metric-title">Average Risk</div>
+            <div class="metric-value">{{ result.average_risk_score }}</div>
+          </div>
+          <div class="card">
+            <div class="metric-title">Predicted Bad</div>
+            <div class="metric-value">{{ result.predicted_bad_count }}</div>
+          </div>
+          <div class="card">
+            <div class="metric-title">Predicted Good</div>
+            <div class="metric-value">{{ result.predicted_good_count }}</div>
+          </div>
+        </div>
+        <p class="subtitle">{{ result.recommendation }}</p>
+        <div class="actions detail-actions">
+          <a class="view-link" href="{{ url_for('analysis_detail', run_id=run_id) }}">Open Full Detail</a>
+          <a class="view-link" href="{{ url_for('analysis_report_pdf', run_id=run_id) }}">Download Report</a>
+        </div>
+      </section>
+    {% endif %}
   </section>
 
   <div class="stack-column">
@@ -50,45 +79,26 @@
       </form>
     </section>
 
-    {% if result %}
+    {% if result and result_mode == "individual" %}
       <section class="chart-card result-inline-card">
         <div class="section-title">Latest Credit-Risk Result</div>
         <div class="result-kpis">
-          {% if result_mode == "batch" %}
-            <div class="card">
-              <div class="metric-title">Rows Processed</div>
-              <div class="metric-value">{{ result.rows_processed }}</div>
-            </div>
-            <div class="card">
-              <div class="metric-title">Average Risk</div>
-              <div class="metric-value">{{ result.average_risk_score }}</div>
-            </div>
-            <div class="card">
-              <div class="metric-title">Predicted Bad</div>
-              <div class="metric-value">{{ result.predicted_bad_count }}</div>
-            </div>
-            <div class="card">
-              <div class="metric-title">Predicted Good</div>
-              <div class="metric-value">{{ result.predicted_good_count }}</div>
-            </div>
-          {% else %}
-            <div class="card">
-              <div class="metric-title">Risk Band</div>
-              <div class="metric-value">{{ result.risk_band }}</div>
-            </div>
-            <div class="card">
-              <div class="metric-title">Risk Score</div>
-              <div class="metric-value">{{ result.risk_score }}</div>
-            </div>
-            <div class="card">
-              <div class="metric-title">Probability Good</div>
-              <div class="metric-value">{{ result.probability_good }}</div>
-            </div>
-            <div class="card">
-              <div class="metric-title">Probability Bad</div>
-              <div class="metric-value">{{ result.probability_bad }}</div>
-            </div>
-          {% endif %}
+          <div class="card">
+            <div class="metric-title">Risk Band</div>
+            <div class="metric-value">{{ result.risk_band }}</div>
+          </div>
+          <div class="card">
+            <div class="metric-title">Risk Score</div>
+            <div class="metric-value">{{ result.risk_score }}</div>
+          </div>
+          <div class="card">
+            <div class="metric-title">Probability Good</div>
+            <div class="metric-value">{{ result.probability_good }}</div>
+          </div>
+          <div class="card">
+            <div class="metric-title">Probability Bad</div>
+            <div class="metric-value">{{ result.probability_bad }}</div>
+          </div>
         </div>
         <p class="subtitle">{{ result.recommendation }}</p>
         <div class="actions detail-actions">
